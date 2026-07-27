@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart-Village-Access-System (Admin Panel)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <!-- โลโก้ -->
+        <div class="logo-box">
+            <img src="assets/images/logochicken.png" alt="Smart Village Logo" class="header-logo">
+        </div>
+        <h1 class="head-content">ระบบจัดการข้อมูลลูกบ้าน (Admin Panel)</h1>
+    </header>
+
+    <main class="main-content">
+        <nav>
+            <ul>
+                <li data-target="home" class="user-select">HOME</li>
+                <li data-target="vehicle">VEHICLE DATA</li>
+                <li id="selectUs" data-target="user">USER DATA</li>
+            </ul>
+        </nav>
+
+        <div class="content-area">
+            <!-- home (Dashboard 6 การ์ดเหมือนเดิม) -->
+            <section class="page active" id="page-home">
+                <section class="dashboard">
+                    <div class="dashboard-banner">
+                        <h2>Admin Dashboard</h2>
+                        <p id="todayDate"></p>
+                    </div>
+
+                    <!-- แถวที่ 1 -->
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <h3>เข้า</h3>
+                            <h1 id="carIn">0</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>ออก</h3>
+                            <h1 id="carOut">0</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>ลูกบ้าน</h3>
+                            <h1 id="residentTotal">0</h1>
+                        </div>
+                    </div>
+
+                    <!-- แถวที่ 2 -->
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <h3>รถทั้งหมด</h3>
+                            <h1 id="vehicleTotal">0</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>ใกล้หมดอายุ</h3>
+                            <h1 id="expireTotal">0</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>อยู่ในหมู่บ้าน</h3>
+                            <h1 id="insideVillage">0</h1>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="recent">
+                    <h2>Recent Activity</h2>
+                    <div id="recentActivity"></div>
+                </section>
+
+                <section class="dataLoading"></section>          
+            </section>
+
+            <!-- VEHICLE-->
+            <section class="page" id="page-vehicle">
+                <div class="panel-header" style="margin-bottom: 15px;">
+                    <h2>ข้อมูลยานพาหนะทั้งหมด</h2>
+                    <input id="searchDashboard" placeholder="ค้นหาทะเบียน..." onkeyup="filterVehicles()" style="padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; width: 100%; max-width: 300px;">
+                </div>
+                <div id="vehicleList"></div>
+                <section class="dataLoading"></section>
+            </section>
+
+            <!-- USER DATA -->
+            <section class="page user-details" id="page-user">
+                <div class="panel-header" style="margin-bottom: 15px;">
+                    <input type="text" id="searchUser" placeholder="ค้นหาเลขที่บ้าน / ชื่อ..." onkeyup="filterUsers()" style="padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; width: 100%; max-width: 300px;">
+                </div>
+                <div class="headUserData">
+                    <h2>ลำดับ</h2>
+                    <h2>เลขที่บ้าน</h2>
+                    <h2>การจัดการ</h2>
+                </div>
+                <section class="dataLoading" id="UserData"></section>
+            </section>
+
+            <!-- USER MORE DETAILS -->  
+            <section class="page moreUserde" id="page-userDetail"></section>
+            
+            <!-- VEHICLE DETAIL -->
+            <section class="page" id="page-vehicleDetail"></section>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
