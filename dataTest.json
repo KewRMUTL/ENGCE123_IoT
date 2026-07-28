@@ -1,0 +1,105 @@
+[
+  {
+    "id": 1,
+    "houseNumber": "158/1",
+    "ownerName": "สมหมาย ดีใจ",
+    "phone": "0812345678",
+    "profile": "assets/images/profile.png",
+    "regitter": "15/10/2025",
+    "dateMember": "15/10/2025",
+    "MemberTimeout": "15/11/2026",
+    "memberStatus": "Active",
+    "vehicles": [
+      {
+        "plate": "1กข 1111",
+        "type": "Car",
+        "regitter": "15/10/2025",
+        "timeInOut": [
+          { "date": "2026-07-28", "in": "15:00", "out": "19:00", "gate": "Main Gate" },
+          { "date": "2026-07-27", "in": "12:00", "out": "19:00", "gate": "Main Gate" }
+        ]
+      },
+      {
+        "plate": "2ขค 58",
+        "type": "Motorcycle",
+        "regitter": "15/10/2025",
+        "timeInOut": [
+          { "date": "2026-07-28", "in": "15:00", "out": "", "gate": "Main Gate" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "houseNumber": "158/2",
+    "ownerName": "สมชาย ใจดี",
+    "phone": "0823456789",
+    "profile": "assets/images/profile.png",
+    "regitter": "01/01/2026",
+    "dateMember": "01/01/2026",
+    "MemberTimeout": "10/08/2026",
+    "memberStatus": "Active",
+    "vehicles": [
+      {
+        "plate": "กท 9999",
+        "type": "Car",
+        "regitter": "01/01/2026",
+        "timeInOut": [
+          { "date": "2026-07-28", "in": "15:00", "out": "19:00", "gate": "Main Gate" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "houseNumber": "158/3",
+    "ownerName": "สมหญิง รักสงบ",
+    "phone": "0834567890",
+    "profile": "assets/images/profile.png",
+    "regitter": "01/08/2025",
+    "dateMember": "01/08/2025",
+    "MemberTimeout": "01/08/2026",
+    "memberStatus": "Active",
+    "vehicles": []
+  },
+  {
+    "id": 4,
+    "houseNumber": "158/4",
+    "ownerName": "อนันต์ มั่งคั่ง",
+    "phone": "0845678901",
+    "profile": "assets/images/profile.png",
+    "regitter": "01/01/2025",
+    "dateMember": "01/01/2025",
+    "MemberTimeout": "01/06/2026",
+    "memberStatus": "Expired",
+    "vehicles": [
+      {
+        "plate": "3กด 4321",
+        "type": "Car",
+        "regitter": "01/01/2025",
+        "timeInOut": [
+          { "date": "2026-07-28", "in": "08:30", "out": "17:00", "gate": "Main Gate" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "houseNumber": "158/5",
+    "ownerName": "วิภาดา สุขสันต์",
+    "phone": "0856789012",
+    "profile": "assets/images/profile.png",
+    "regitter": "10/01/2026",
+    "dateMember": "10/01/2026",
+    "MemberTimeout": "31/12/2026",
+    "memberStatus": "Active",
+    "vehicles": [
+      {
+        "plate": "5ฮฮ 888",
+        "type": "Motorcycle",
+        "regitter": "10/01/2026",
+        "timeInOut": []
+      }
+    ]
+  }
+]
