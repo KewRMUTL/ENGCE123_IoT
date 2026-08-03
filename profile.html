@@ -3,57 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ข้อมูลส่วนตัว - Resident Portal</title>
+    <title>ระบบจัดการข้อมูลลูกบ้าน - USER DATA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #fcf8ec;      /* สีพื้นหลังครีมเดิม */
+            --navy-dark: #0f2c59;    /* สีน้ำเงินเข้มเดิม */
+        }
+        
+        body { 
+            background-color: var(--bg-main); 
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Sidebar สไตล์เดิม */
+        .sidebar {
+            width: 220px;
+            background-color: var(--navy-dark);
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            color: white;
+            padding-top: 20px;
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-menu a.active, .sidebar-menu a:hover {
+            background-color: white;
+            color: var(--navy-dark);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 220px;
+            padding: 0;
+        }
+
+        .top-header {
+            background-color: var(--navy-dark);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .content-body {
+            padding: 30px;
+        }
+
+        /* แถบหัวข้อสีน้ำเงินทรงสี่เหลี่ยมตามแบบภาพของคุณ */
+        .navy-box {
+            background-color: var(--navy-dark);
+            color: white;
+            padding: 12px 20px;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .vehicle-item {
+            background-color: var(--navy-dark);
+            color: white;
+            border-radius: 4px;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-back {
+            background-color: white;
+            color: var(--navy-dark);
+            border-radius: 20px;
+            padding: 5px 20px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 1px solid var(--navy-dark);
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <div class="container my-5" style="max-width: 600px;">
-        <!-- ปุ่มกดกลับ ลิงก์ถูกต้องไปหน้า Dashboard -->
-		<a href="dashboard.html" class="btn btn-outline-secondary">← กลับหน้าประวัติ</a>
+    <!-- Sidebar ด้านซ้าย -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <img src="logochicken.png" alt="Logo" style="width: 50px; filter: brightness(0) invert(1);">
+        </div>
+        <div class="sidebar-menu">
+            <a href="dashboard.html">HOME</a>
+            <a href="profile.html" class="active">USER DATA</a>
+            <a href="#" onclick="logout()" style="margin-top: 50px; color: #ff6b6b;">LOGOUT</a>
+        </div>
+    </div>
 
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h4 class="fw-bold text-primary mb-4">👤 ข้อมูลส่วนตัวลูกบ้าน</h4>
-            
-            <div class="mb-3">
-                <label class="text-muted small d-block">บ้านเลขที่</label>
-                <span id="profHouse" class="fs-5 fw-bold text-dark">--</span>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            ระบบจัดการข้อมูลลูกบ้าน
+        </div>
+
+        <div class="content-body">
+            <!-- ปุ่มกดกลับ ลิงก์ถูกต้องไปหน้า dashboard.html -->
+            <a href="dashboard.html" class="btn-back">← กลับหน้าหลัก (HOME)</a>
+
+            <div class="navy-box" id="dispHouse">เลขที่บ้าน: --</div>
+            <div class="navy-box" id="dispOwner">ชื่อเจ้าของบ้าน: --</div>
+
+            <div class="navy-box text-center mt-4">รายละเอียด ยานพาหนะ (เฉพาะรถยนต์)</div>
+
+            <!-- รายการป้ายทะเบียนรถสไตล์แถบสี่เหลี่ยมเดิมของคุณ -->
+            <div id="vehicleList">
+                <div class="text-center py-3">กำลังโหลดข้อมูล...</div>
             </div>
-            
-            <div class="mb-3">
-                <label class="text-muted small d-block">ชื่อ-นามสกุล เจ้าของบ้าน</label>
-                <span class="fs-6 text-dark">คุณสมชาย ใจดี</span>
-            </div>
-
-            <div class="mb-4">
-                <label class="text-muted small d-block mb-2">ทะเบียนรถยนต์ที่ลงทะเบียนไว้ (เฉพาะ Car)</label>
-                <ul class="list-group">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        1กข 8888 กรุงเทพฯ
-                        <span class="badge bg-primary rounded-pill">รถยนต์หลัก</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        2กง 1234 เชียงใหม่
-                        <span class="badge bg-secondary rounded-pill">รถยนต์สำรอง</span>
-                    </li>
-                </ul>
-            </div>
-
-            <button onclick="logout()" class="btn btn-danger w-100 py-2 rounded-3">ออกจากระบบ</button>
         </div>
     </div>
 
     <script>
         const session = JSON.parse(localStorage.getItem('user_session'));
-        if(!session) {
+        if (!session) {
             window.location.href = "index.html";
         } else {
-            document.getElementById('profHouse').innerText = session.house_no;
+            loadUserProfile(session.house_no);
         }
 
         function logout() {
             localStorage.removeItem('user_session');
             window.location.href = "index.html";
+        }
+
+        function loadUserProfile(targetHouseNo) {
+            fetch('dataTest.json')
+                .then(res => res.json())
+                .then(data => {
+                    const currentUser = data.find(u => u.houseNumber === targetHouseNo);
+                    
+                    if (currentUser) {
+                        document.getElementById('dispHouse').innerText = "เลขที่บ้าน: " + currentUser.houseNumber;
+                        document.getElementById('dispOwner').innerText = "ชื่อเจ้าของบ้าน: " + currentUser.ownerName;
+
+                        let html = '';
+                        currentUser.vehicles.forEach(vehicle => {
+                            // กรองเฉพาะประเภท รถยนต์ (Car) ตัด มอเตอร์ไซค์ ออก
+                            if (vehicle.type === "Car") {
+                                html += `
+                                    <div class="vehicle-item">
+                                        <div>ป้ายทะเบียน: <strong>${vehicle.plate}</strong></div>
+                                        <div><span class="badge bg-light text-dark">รถยนต์ (Car)</span></div>
+                                    </div>
+                                `;
+                            }
+                        });
+
+                        document.getElementById('vehicleList').innerHTML = html || '<div class="text-center py-3">ไม่พบข้อมูลรถยนต์ที่ลงทะเบียนไว้</div>';
+                    }
+                });
         }
     </script>
 </body>
