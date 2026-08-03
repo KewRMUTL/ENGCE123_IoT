@@ -9,91 +9,101 @@
 </head>
 
 <body>
-    <!-- หน้าต่าง ล็อกอินสำหรับลูกบ้าน (Login Modal) -->
-    <div id="loginModal" class="login-modal-overlay">
+    <!-- Modal เข้าสู่ระบบ / ลงทะเบียน -->
+    <div id="authModal" class="login-modal-overlay">
         <div class="login-box">
-            <img src="logochicken.png" alt="Smart Village Logo" class="login-logo">
+            <!-- 1. แก้ Path รูปหน้า Login ให้เป็น assets/images/logochicken.png -->
+            <img src="assets/images/logochicken.png" alt="Smart Village Logo" class="login-logo">
             <h2>ระบบจัดการข้อมูลลูกบ้าน</h2>
-            <p style="margin-bottom: 20px; color: #666; font-size: 14px;">เข้าสู่ระบบสำหรับลูกบ้าน</p>
-            <form id="loginForm">
-                <input type="text" id="loginHouseNo" placeholder="กรอกเลขที่บ้าน (เช่น 158/1)" required style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box;">
-                <button type="submit" class="back-btn" style="width: 100%; margin: 0; background-color: var(--color-primary); color: white;">เข้าสู่ระบบ</button>
+            
+            <div class="auth-tabs">
+                <button type="button" id="tabLoginBtn" class="auth-tab active">เข้าสู่ระบบ</button>
+                <button type="button" id="tabRegisterBtn" class="auth-tab">ลงทะเบียน</button>
+            </div>
+
+            <!-- ฟอร์มเข้าสู่ระบบ -->
+            <form id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="ชื่อผู้ใช้งาน (เช่น user1 หรือ 158/1)" required autocomplete="off">
+                <input type="password" id="loginPassword" placeholder="รหัสผ่าน (ลองใช้ pass123)" required autocomplete="off">
+                <button type="submit" class="submit-btn">เข้าสู่ระบบ</button>
+            </form>
+
+            <!-- ฟอร์มลงทะเบียน -->
+            <form id="registerForm" class="auth-form">
+                <input type="text" id="regHouseNo" placeholder="เลขที่บ้าน (เช่น 158/6)" required autocomplete="off">
+                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล เจ้าบ้าน" required autocomplete="off">
+                <input type="tel" id="regPhone" placeholder="เบอร์โทรศัพท์" required autocomplete="off">
+                <input type="text" id="regUsername" placeholder="ตั้งชื่อผู้ใช้งาน (Username)" required autocomplete="off">
+                <input type="password" id="regPassword" placeholder="ตั้งรหัสผ่าน" required autocomplete="off">
+                <button type="submit" class="submit-btn">ลงทะเบียน</button>
             </form>
         </div>
     </div>
 
+    <!-- Header หลัก -->
     <header>
-        <!-- โลโก้ -->
         <div class="logo-box">
-            <img src="logochicken.png" alt="Smart Village Logo" class="header-logo">
+            <!-- 2. แก้ Path รูปใน Header ให้เป็น assets/images/logochicken.png -->
+            <img src="assets/images/logochicken.png" alt="Smart Village Logo" class="header-logo">
         </div>
-        <!-- ลบคำว่า (Admin Panel) ออกแล้ว -->
         <h1 class="head-content">ระบบจัดการข้อมูลลูกบ้าน</h1>
-        <button id="logoutBtn" class="back-btn" style="margin: 0; font-size: 14px; padding: 6px 15px;">ออกจากระบบ</button>
+        <button type="button" id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
     </header>
 
     <main class="main-content">
         <nav>
             <ul>
                 <li data-target="home" class="user-select">HOME</li>
-                <!-- ตัด VEHICLE DATA ออกตามมติประชุม -->
                 <li id="selectUs" data-target="user">USER DATA</li>
             </ul>
         </nav>
 
         <div class="content-area">
-            <!-- home (Dashboard) -->
+            <!-- หน้า Dashboard -->
             <section class="page active" id="page-home">
                 <section class="dashboard">
                     <div class="dashboard-banner">
-                        <h2 id="welcomeText">Resident Dashboard</h2>
+                        <h2 id="welcomeText">Dashboard ลูกบ้าน</h2>
                         <p id="todayDate"></p>
                     </div>
 
-                    <!-- แถวที่ 1 (ปรับให้เหลือเฉพาะสถิติรถยนต์) -->
                     <div class="summary-grid">
                         <div class="summary-box">
-                            <h3>เข้า (รถยนต์)</h3>
+                            <h3>เข้า</h3>
                             <h1 id="carIn">0</h1>
                         </div>
-
                         <div class="summary-box">
-                            <h3>ออก (รถยนต์)</h3>
+                            <h3>ออก</h3>
                             <h1 id="carOut">0</h1>
                         </div>
-
                         <div class="summary-box">
                             <h3>อยู่ในหมู่บ้าน</h3>
                             <h1 id="insideVillage">0</h1>
                         </div>
                     </div>
 
-                    <!-- แถวที่ 2 -->
                     <div class="summary-grid">
                         <div class="summary-box">
-                            <h3>จำนวนรถยนต์ผูกไว้</h3>
+                            <h3>จำนวนรถที่ลงทะเบียน</h3>
                             <h1 id="vehicleTotal">0</h1>
                         </div>
-
                         <div class="summary-box">
                             <h3>สถานะสมาชิก</h3>
-                            <h1 id="residentStatus" style="font-size: 28px; margin-top: 30px;">-</h1>
+                            <h1 id="residentStatus" style="font-size: 28px; margin-top: 10px;">-</h1>
                         </div>
-
                         <div class="summary-box">
-                            <h3>วันหมดอายุ</h3>
-                            <h1 id="expireDateText" style="font-size: 24px; margin-top: 35px;">-</h1>
+                            <h3>วันหมดอายุบัตร</h3>
+                            <h1 id="expireDateText" style="font-size: 24px; margin-top: 15px;">-</h1>
                         </div>
                     </div>
                 </section>
-                
                 <section class="dataLoading"></section>          
             </section>
 
-            <!-- USER DATA -->
+            <!-- หน้า รายชื่อลูกบ้าน -->
             <section class="page user-details" id="page-user">
-                <div class="panel-header" style="margin-bottom: 15px; margin-top: 15px;">
-                    <input type="text" id="searchUser" placeholder="ค้นหาเลขที่บ้าน / ชื่อ..." onkeyup="filterUsers()" style="padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; width: 100%; max-width: 300px;">
+                <div class="panel-header" style="margin: 15px 0;">
+                    <input type="text" id="searchUser" placeholder="ค้นหาเลขที่บ้าน / ชื่อ..." style="padding: 10px 15px; border-radius: 20px; border: 1px solid var(--color-border); width: 100%; max-width: 300px;">
                 </div>
                 <div class="headUserData">
                     <h2>ลำดับ</h2>
@@ -103,10 +113,10 @@
                 <section class="dataLoading" id="UserData"></section>
             </section>
 
-            <!-- USER MORE DETAILS -->  
+            <!-- หน้า รายละเอียดข้อมูลบ้านและรถ -->
             <section class="page moreUserde" id="page-userDetail"></section>
             
-            <!-- VEHICLE DETAIL -->
+            <!-- หน้า ประวัติการเข้า-ออกของรถ -->
             <section class="page" id="page-vehicleDetail"></section>
         </div>
     </main>
