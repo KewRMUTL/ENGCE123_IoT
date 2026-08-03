@@ -3,49 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ - ระบบลูกบ้าน</title>
+    <title>เข้าสู่ระบบ - ระบบจัดการข้อมูลลูกบ้าน</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #eef2f5; font-family: 'Kanit', sans-serif; }
-        .login-card { max-width: 400px; margin: 80px auto; border-radius: 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        :root {
+            --bg-main: #fcf8ec;      /* สีพื้นหลังครีม */
+            --navy-dark: #0f2c59;    /* สีน้ำเงินเข้ม */
+        }
+        
+        body { 
+            background-color: var(--bg-main); 
+            font-family: sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .login-card {
+            background-color: var(--navy-dark);
+            color: white;
+            border-radius: 8px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 70px;
+            margin-bottom: 15px;
+            filter: brightness(0) invert(1);
+        }
+
+        .login-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control-custom {
+            border-radius: 4px;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+
+        .btn-custom-light {
+            background-color: white;
+            color: var(--navy-dark);
+            border-radius: 20px;
+            padding: 8px 30px;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-custom-light:hover {
+            background-color: #e6e6e6;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="card login-card p-4">
-            <div class="text-center mb-4">
-                <h3 class="fw-bold text-primary">🚗 Resident Portal</h3>
-                <p class="text-muted small">ระบบตรวจสอบการเข้า-ออกโครงการ (สำหรับลูกบ้าน)</p>
-            </div>
+    <div class="login-card">
+        <!-- โลโก้ดั้งเดิม -->
+        <img src="logochicken.png" alt="Logo" class="login-logo">
+        
+        <!-- หัวข้อระบบจัดการข้อมูลลูกบ้าน -->
+        <div class="login-title">ระบบจัดการข้อมูลลูกบ้าน</div>
 
-            <form id="loginForm">
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">ชื่อผู้ใช้งาน / เลขที่บ้าน</label>
-                    <input type="text" id="username" class="form-control" placeholder="เช่น 99/123" required>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">รหัสผ่าน</label>
-                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 fw-bold">เข้าสู่ระบบ</button>
-            </form>
-        </div>
+        <form id="loginForm">
+            <div class="text-start mb-2">
+                <small>เลขที่บ้าน / บ้านเลขที่</small>
+            </div>
+            <input type="text" id="houseInput" class="form-control form-control-custom" placeholder="เช่น 158/1" required>
+
+            <div class="text-start mb-2">
+                <small>รหัสผ่าน</small>
+            </div>
+            <input type="password" id="passInput" class="form-control form-control-custom" placeholder="••••••••" required>
+
+            <button type="submit" class="btn btn-custom-light">เข้าสู่ระบบ</button>
+        </form>
     </div>
 
     <script>
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const user = document.getElementById('username').value;
-            
-            // จำลองการเก็บข้อมูล Session ลูกบ้าน (เตรียมไว้ให้เพื่อนฝั่ง Backend มาเชื่อมต่อ API)
+            const houseNo = document.getElementById('houseInput').value.trim();
+
+            // บันทึก Session เพื่อใช้อ่านข้อมูลจาก dataTest.json
             localStorage.setItem('user_session', JSON.stringify({
-                house_no: user,
-                user_id: "USR_99123",
-                role: "resident"
+                house_no: houseNo
             }));
 
-            // ล็อกอินสำเร็จ เปลี่ยนหน้าไป Dashboard
+            // ล็อกอินแล้วไปยังหน้า dashboard.html
             window.location.href = "dashboard.html";
         });
     </script>
