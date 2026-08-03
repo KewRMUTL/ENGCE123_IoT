@@ -1,111 +1,117 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ - ระบบจัดการข้อมูลลูกบ้าน</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --bg-main: #fcf8ec;      /* สีพื้นหลังครีม */
-            --navy-dark: #0f2c59;    /* สีน้ำเงินเข้ม */
-        }
-        
-        body { 
-            background-color: var(--bg-main); 
-            font-family: sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-        }
-
-        .login-card {
-            background-color: var(--navy-dark);
-            color: white;
-            border-radius: 8px;
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            text-align: center;
-        }
-
-        .login-logo {
-            width: 70px;
-            margin-bottom: 15px;
-            filter: brightness(0) invert(1);
-        }
-
-        .login-title {
-            font-size: 1.4rem;
-            font-weight: bold;
-            margin-bottom: 25px;
-            letter-spacing: 0.5px;
-        }
-
-        .form-control-custom {
-            border-radius: 4px;
-            padding: 10px 15px;
-            border: 1px solid #ccc;
-            margin-bottom: 15px;
-        }
-
-        .btn-custom-light {
-            background-color: white;
-            color: var(--navy-dark);
-            border-radius: 20px;
-            padding: 8px 30px;
-            font-weight: bold;
-            border: none;
-            width: 100%;
-            margin-top: 10px;
-            transition: all 0.2s;
-        }
-
-        .btn-custom-light:hover {
-            background-color: #e6e6e6;
-        }
-    </style>
+    <title>Smart-Village-Access-System</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-
-    <div class="login-card">
-        <!-- โลโก้ดั้งเดิม -->
-        <img src="logochicken.png" alt="Logo" class="login-logo">
-        
-        <!-- หัวข้อระบบจัดการข้อมูลลูกบ้าน -->
-        <div class="login-title">ระบบจัดการข้อมูลลูกบ้าน</div>
-
-        <form id="loginForm">
-            <div class="text-start mb-2">
-                <small>เลขที่บ้าน / บ้านเลขที่</small>
-            </div>
-            <input type="text" id="houseInput" class="form-control form-control-custom" placeholder="เช่น 158/1" required>
-
-            <div class="text-start mb-2">
-                <small>รหัสผ่าน</small>
-            </div>
-            <input type="password" id="passInput" class="form-control form-control-custom" placeholder="••••••••" required>
-
-            <button type="submit" class="btn btn-custom-light">เข้าสู่ระบบ</button>
-        </form>
+    <!-- หน้าต่าง ล็อกอินสำหรับลูกบ้าน (Login Modal) -->
+    <div id="loginModal" class="login-modal-overlay">
+        <div class="login-box">
+            <img src="logochicken.png" alt="Smart Village Logo" class="login-logo">
+            <h2>ระบบจัดการข้อมูลลูกบ้าน</h2>
+            <p style="margin-bottom: 20px; color: #666; font-size: 14px;">เข้าสู่ระบบสำหรับลูกบ้าน</p>
+            <form id="loginForm">
+                <input type="text" id="loginHouseNo" placeholder="กรอกเลขที่บ้าน (เช่น 158/1)" required style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box;">
+                <button type="submit" class="back-btn" style="width: 100%; margin: 0; background-color: var(--color-primary); color: white;">เข้าสู่ระบบ</button>
+            </form>
+        </div>
     </div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const houseNo = document.getElementById('houseInput').value.trim();
+    <header>
+        <!-- โลโก้ -->
+        <div class="logo-box">
+            <img src="logochicken.png" alt="Smart Village Logo" class="header-logo">
+        </div>
+        <!-- ลบคำว่า (Admin Panel) ออกแล้ว -->
+        <h1 class="head-content">ระบบจัดการข้อมูลลูกบ้าน</h1>
+        <button id="logoutBtn" class="back-btn" style="margin: 0; font-size: 14px; padding: 6px 15px;">ออกจากระบบ</button>
+    </header>
 
-            // บันทึก Session เพื่อใช้อ่านข้อมูลจาก dataTest.json
-            localStorage.setItem('user_session', JSON.stringify({
-                house_no: houseNo
-            }));
+    <main class="main-content">
+        <nav>
+            <ul>
+                <li data-target="home" class="user-select">HOME</li>
+                <!-- ตัด VEHICLE DATA ออกตามมติประชุม -->
+                <li id="selectUs" data-target="user">USER DATA</li>
+            </ul>
+        </nav>
 
-            // ล็อกอินแล้วไปยังหน้า dashboard.html
-            window.location.href = "dashboard.html";
-        });
-    </script>
+        <div class="content-area">
+            <!-- home (Dashboard) -->
+            <section class="page active" id="page-home">
+                <section class="dashboard">
+                    <div class="dashboard-banner">
+                        <h2 id="welcomeText">Resident Dashboard</h2>
+                        <p id="todayDate"></p>
+                    </div>
+
+                    <!-- แถวที่ 1 (ปรับให้เหลือเฉพาะสถิติรถยนต์) -->
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <h3>เข้า (รถยนต์)</h3>
+                            <h1 id="carIn">0</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>ออก (รถยนต์)</h3>
+                            <h1 id="carOut">0</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>อยู่ในหมู่บ้าน</h3>
+                            <h1 id="insideVillage">0</h1>
+                        </div>
+                    </div>
+
+                    <!-- แถวที่ 2 -->
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <h3>จำนวนรถยนต์ผูกไว้</h3>
+                            <h1 id="vehicleTotal">0</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>สถานะสมาชิก</h3>
+                            <h1 id="residentStatus" style="font-size: 28px; margin-top: 30px;">-</h1>
+                        </div>
+
+                        <div class="summary-box">
+                            <h3>วันหมดอายุ</h3>
+                            <h1 id="expireDateText" style="font-size: 24px; margin-top: 35px;">-</h1>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="dataLoading"></section>          
+            </section>
+
+            <!-- USER DATA -->
+            <section class="page user-details" id="page-user">
+                <div class="panel-header" style="margin-bottom: 15px; margin-top: 15px;">
+                    <input type="text" id="searchUser" placeholder="ค้นหาเลขที่บ้าน / ชื่อ..." onkeyup="filterUsers()" style="padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; width: 100%; max-width: 300px;">
+                </div>
+                <div class="headUserData">
+                    <h2>ลำดับ</h2>
+                    <h2>เลขที่บ้าน</h2>
+                    <h2>การจัดการ</h2>
+                </div>
+                <section class="dataLoading" id="UserData"></section>
+            </section>
+
+            <!-- USER MORE DETAILS -->  
+            <section class="page moreUserde" id="page-userDetail"></section>
+            
+            <!-- VEHICLE DETAIL -->
+            <section class="page" id="page-vehicleDetail"></section>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
 </body>
+
 </html>
