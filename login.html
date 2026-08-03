@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - Smart Village Access System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <img src="logochicken.png" alt="Smart Village Logo" class="login-logo" onerror="this.src='placeholder-300x300.png'">
+            <h2>Smart-Village-Access-System</h2>
+            
+            <div class="auth-tabs">
+                <button id="tabLoginBtn" class="auth-tab active" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+                <button id="tabRegisterBtn" class="auth-tab" onclick="switchAuthTab('register')">ลงทะเบียน</button>
+            </div>
+
+            <!-- ฟอร์มเข้าสู่ระบบ -->
+            <form id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="กรอกเลขที่บ้าน (เช่น 158/1)" required>
+                <input type="password" id="loginPassword" placeholder="รหัสผ่าน" required>
+                <button type="submit" class="submit-btn">เข้าสู่ระบบ</button>
+            </form>
+
+            <!-- ฟอร์มลงทะเบียน -->
+            <form id="registerForm" class="auth-form">
+                <input type="text" id="regHouseNo" placeholder="เลขที่บ้าน (เช่น 158/1)" required>
+                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล เจ้าบ้าน" required>
+                <input type="tel" id="regPhone" placeholder="เบอร์โทรศัพท์" required>
+                <input type="password" id="regPassword" placeholder="ตั้งรหัสผ่าน" required>
+                <button type="submit" class="submit-btn">ลงทะเบียน</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+
+            if (tab === 'login') {
+                document.getElementById('tabLoginBtn').classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.getElementById('tabRegisterBtn').classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        // โหลดข้อมูล dataTest.json เพื่อตรวจสอบการ Login
+        let mainData = [];
+        fetch('./dataTest.json')
+            .then(res => res.json())
+            .then(data => mainData = data)
+            .catch(err => console.error(err));
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const houseNo = document.getElementById('loginUsername').value.trim();
+            const user = mainData.find(u => u.houseNumber === houseNo || u.ownerName.includes(houseNo));
+
+            if (user) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                window.location.href = 'index.html'; // ล็อกอินสำเร็จเด้งไปหน้าหลัก
+            } else {
+                alert('ไม่พบข้อมูลบ้านเลขที่นี้ กรุณาตรวจสอบอีกครั้ง');
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const houseNo = document.getElementById('regHouseNo').value.trim();
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+
+            const newUser = {
+                id: mainData.length + 1,
+                houseNumber: houseNo,
+                ownerName: name,
+                phone: phone,
+                profile: "assets/images/profile.png",
+                regitter: new Date().toLocaleDateString('th-TH'),
+                dateMember: new Date().toLocaleDateString('th-TH'),
+                MemberTimeout: "31/12/2026",
+                memberStatus: "Active",
+                vehicles: []
+            };
+
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+            alert('ลงทะเบียนสำเร็จ!');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
