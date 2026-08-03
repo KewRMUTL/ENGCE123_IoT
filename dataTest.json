@@ -1,6 +1,8 @@
 [
   {
     "id": 1,
+    "username": "user1",
+    "password": "pass123",
     "houseNumber": "158/1",
     "ownerName": "สมหมาย ดีใจ",
     "phone": "0812345678",
@@ -18,26 +20,20 @@
           { "date": "2026-07-28", "in": "15:00", "out": "19:00", "gate": "Main Gate" },
           { "date": "2026-07-27", "in": "12:00", "out": "19:00", "gate": "Main Gate" }
         ]
-      },
-      {
-        "plate": "2ขค 58",
-        "type": "Motorcycle",
-        "regitter": "15/10/2025",
-        "timeInOut": [
-          { "date": "2026-07-28", "in": "15:00", "out": "", "gate": "Main Gate" }
-        ]
       }
     ]
   },
   {
     "id": 2,
+    "username": "user2",
+    "password": "pass123",
     "houseNumber": "158/2",
     "ownerName": "สมชาย ใจดี",
     "phone": "0823456789",
     "profile": "assets/images/profile.png",
     "regitter": "01/01/2026",
     "dateMember": "01/01/2026",
-    "MemberTimeout": "10/08/2026",
+    "MemberTimeout": "20/08/2026",
     "memberStatus": "Active",
     "vehicles": [
       {
@@ -52,18 +48,22 @@
   },
   {
     "id": 3,
+    "username": "user3",
+    "password": "pass123",
     "houseNumber": "158/3",
     "ownerName": "สมหญิง รักสงบ",
     "phone": "0834567890",
     "profile": "assets/images/profile.png",
     "regitter": "01/08/2025",
     "dateMember": "01/08/2025",
-    "MemberTimeout": "01/08/2026",
+    "MemberTimeout": "10/08/2026",
     "memberStatus": "Active",
     "vehicles": []
   },
   {
     "id": 4,
+    "username": "user4",
+    "password": "pass123",
     "houseNumber": "158/4",
     "ownerName": "อนันต์ มั่งคั่ง",
     "phone": "0845678901",
@@ -85,6 +85,8 @@
   },
   {
     "id": 5,
+    "username": "user5",
+    "password": "pass123",
     "houseNumber": "158/5",
     "ownerName": "วิภาดา สุขสันต์",
     "phone": "0856789012",
@@ -93,13 +95,6 @@
     "dateMember": "10/01/2026",
     "MemberTimeout": "31/12/2026",
     "memberStatus": "Active",
-    "vehicles": [
-      {
-        "plate": "5ฮฮ 888",
-        "type": "Motorcycle",
-        "regitter": "10/01/2026",
-        "timeInOut": []
-      }
-    ]
+    "vehicles": []
   }
 ]
