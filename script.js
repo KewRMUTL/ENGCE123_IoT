@@ -3,13 +3,13 @@
 // ===================== ตัวแปรสถานะหลักของแอป =====================
 const url = "./dataTest.json";
 let mainData = [];       // ข้อมูลลูกบ้านทั้งหมดที่โหลดมาจาก JSON
-let isLoading = true;    // true = กำลังโหลดข้อมูลอยู่ (ยังไม่มีข้อมูลให้แสดง)
-let fetchStatus = 0;     // เก็บ HTTP status ของการ fetch ล่าสุด (0 = ยังไม่เคยลอง)
+let isLoading = true;    // true = กำลังโหลดข้อมูลอยู่
+let fetchStatus = 0;     // เก็บ HTTP status ของการ fetch ล่าสุด
+let loggedInHouse = localStorage.getItem('loggedInHouse') || null; // เก็บ Session บ้านที่ล็อกอิน
 
 // ===================== เมนู / การสลับหน้า =====================
 const navItems = document.querySelectorAll('nav li[data-target]');
 const pages = document.querySelectorAll('.page');
-
 
 function showPage(target, params) {
     pages.forEach(page => page.classList.remove('active'));        // ปิดทุกหน้าก่อน
@@ -18,15 +18,13 @@ function showPage(target, params) {
     const targetPage = document.querySelector(`#page-${target}`);
     if (targetPage) {
         targetPage.classList.add('active');   // เปิดเฉพาะหน้าที่ต้องการ
-        renderUserPage(target, params);           // สั่ง render เนื้อหาของหน้านั้น
+        renderUserPage(target, params);       // สั่ง render เนื้อหาของหน้านั้น
     }
 
-    // ไฮไลต์เมนูที่ตรงกับหน้าปัจจุบัน (ทำงานได้ทั้งตอนคลิกเองและตอนเรียกจากโค้ด)
     const activeLi = document.querySelector(`nav li[data-target="${target}"]`);
     if (activeLi) activeLi.classList.add('user-select');
 }
 
-// ผูก event คลิกเมนูทุกอัน ให้เรียก showPage ตาม data-target ของ li นั้นๆ
 navItems.forEach(li => {
     li.addEventListener('click', (e) => {
         e.preventDefault();
@@ -34,19 +32,39 @@ navItems.forEach(li => {
     });
 });
 
-// เปิดหน้า home เป็นค่าเริ่มต้นตอนโหลดสคริปต์
-showPage('home');
+// ===================== ระบบ Login / Logout ลูกบ้าน =====================
+const loginModal = document.getElementById('loginModal');
+const loginForm = document.getElementById('loginForm');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function checkLoginState() {
+    if (loggedInHouse) {
+        loginModal.style.display = 'none';
+    } else {
+        loginModal.style.display = 'flex';
+    }
+}
+
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const houseInput = document.getElementById('loginHouseNo').value.trim();
+    if (houseInput) {
+        loggedInHouse = houseInput;
+        localStorage.setItem('loggedInHouse', houseInput);
+        checkLoginState();
+        refreshCurrentPage();
+    }
+});
+
+logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('loggedInHouse');
+    loggedInHouse = null;
+    checkLoginState();
+});
 
 // ===================== โหลดข้อมูลจาก dataTest.json =====================
-/**
- * ดึงข้อมูลจากไฟล์ JSON แล้วอัปเดตสถานะ loading / error
- * มีการหน่วงเวลาจำลอง (simulate delay) ไว้เพื่อทดสอบ loading state
- */
 async function load(path) {
     try {
-        // จำลองการหน่วงเวลา 3 วินาที เพื่อให้เห็น loading state ชัดๆ ตอน dev
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
         const res = await fetch(path);
         fetchStatus = res.status;
         if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -54,50 +72,31 @@ async function load(path) {
         const data = await res.json();
         mainData = data;
         isLoading = false;
-        refreshCurrentPage(); // ข้อมูลมาแล้ว ให้ re-render หน้าที่เปิดอยู่ตอนนี้
+        refreshCurrentPage();
     } catch (err) {
         console.log(err);
         isLoading = false;
-        // ถ้า fetchStatus ยังเป็น 0 แปลว่า request ไม่ถึงเซิร์ฟเวอร์เลย (เช่นเน็ตหลุด)
-        // ให้ตั้งเป็น 500 เพื่อให้ผ่านเงื่อนไข error state และแสดงข้อความแจ้งเตือนได้
         if (fetchStatus === 0) fetchStatus = 500;
         refreshCurrentPage();
     }
 }
 
-/**
- * หา li เมนูที่กำลัง active อยู่ แล้วสั่ง render หน้านั้นซ้ำอีกครั้ง
- * ใช้ตอนโหลดข้อมูลเสร็จ (หรือ error) เพื่ออัปเดตหน้าปัจจุบันโดยไม่ต้องรอ user คลิกใหม่
- */
 function refreshCurrentPage() {
-    const activeLi = document.querySelector('nav li.user-select');
+    const activeLi = document.querySelector('nav li.user-select') || document.querySelector('nav li[data-target="home"]');
     if (activeLi) {
         const target = activeLi.dataset.target;
-        // หน้า user/home/vehicle ไม่ต้องใช้ id ตอน refresh อัตโนมัติ
         renderUserPage(target, null);
     }
 }
 
 // ===================== ตัวกลางตัดสินใจว่าจะ render อะไร =====================
-/**
- * ฟังก์ชันกลางที่เรียกทุกครั้งที่ต้อง render เนื้อหาในหน้าใดหน้าหนึ่ง
- * เช็คสถานะตามลำดับ: loading -> error -> success แล้วค่อยตัดสินใจว่า
- * จะ render ข้อมูลจริงของหน้านั้น (user / userDetail / vehicle / home)
- */
 function renderUserPage(target, params) {
-    // 1. หาหน้าที่กำลังเปิดอยู่
     const targetPage = document.querySelector(`#page-${target}`);
-
-    // 2. หา container สำหรับแสดงข้อความ loading/error "ภายใน" หน้านั้นเท่านั้น
-    //    (กันไม่ให้ไปทับ container ของหน้าอื่นโดยไม่ตั้งใจ)
     let loadingContainer = null;
     if (targetPage) {
         loadingContainer = targetPage.querySelector('.dataLoading') || targetPage.querySelector('#UserData');
     }
-    // หมายเหตุ: หน้า #page-userDetail ยังไม่มี .dataLoading หรือ #UserData อยู่ข้างใน
-    // ถ้าจะรองรับ loading/error ตอนเข้าหน้านี้โดยตรง (เช่นแชร์ลิงก์) ต้องเพิ่ม container ให้หน้านี้ด้วย
 
-    // 3. เช็คสถานะ "กำลังโหลด"
     if (isLoading) {
         if (loadingContainer) {
             loadingContainer.innerHTML = `<p class="loading-text">Loading data...</p>`;
@@ -105,7 +104,6 @@ function renderUserPage(target, params) {
         return;
     }
 
-    // 4. เช็คสถานะ "error" (HTTP status ไม่อยู่ในช่วง 200-299)
     if (fetchStatus < 200 || fetchStatus > 299) {
         if (loadingContainer) {
             loadingContainer.innerHTML = `<p class="loading-text" style="color: red;">Data loading error Please try again later(Code: ${fetchStatus})</p>`;
@@ -113,28 +111,24 @@ function renderUserPage(target, params) {
         return;
     }
 
-    // 5. สถานะ "สำเร็จ" -> render เนื้อหาจริงตามหน้า
+    // กรองข้อมูลเฉพาะบ้านที่ล็อกอิน (ถ้ามี)
+    let filteredData = mainData;
+    if (loggedInHouse) {
+        filteredData = mainData.filter(u => u.houseNumber === loggedInHouse);
+    }
+
     if (target === "user") {
-        console.log(`Open USER DATA`);
-        updateData(mainData);
+        updateData(filteredData);
     } else if (target === "userDetail") {
-        console.log(`Open moreDetailsUser`);
         moreDetailsUser(Number(params.id));
     } else if (target === "vehicleDetail") {
         vDetail(Number(params.id), Number(params.carIndex));
-    } else if (target === "vehicle") {
-        renderVehicleList();
-    } else if(target=="home"){
-        renderDashboard();     // edited
+    } else if (target === "home") {
+        renderDashboard(filteredData);
     }
 }
 
-
 // ===================== Render หน้า USER DATA (list) =====================
-/**
- * สร้างรายการ user ทั้งหมดใส่ใน #UserData
- * (ตั้งค่า innerHTML ครั้งเดียวหลัง loop จบ เพื่อลด reflow/repaint)
- */
 function updateData(data) {
     const UserData = document.querySelector('#UserData');
     let div = "";
@@ -142,58 +136,41 @@ function updateData(data) {
         div += `
         <div class="User">
             <h2>${element.id}</h2>
-            <h2>${element.houseNumber}</h2>
-            <a href="#" data-id="${element.id}" data-target="userDetail" >แสดงข้อมูลเพิ่มเติม</a>
+            <h2>${element.houseNumber} (${element.ownerName})</h2>
+            <a href="#" data-id="${element.id}" data-target="userDetail">แสดงข้อมูลเพิ่มเติม</a>
         </div>
         `;
     });
-    UserData.innerHTML = div || `<p class="loading-text">ไม่พบข้อมูลลูกบ้าน</p>`;
+    UserData.innerHTML = div || `<p class="loading-text">ไม่พบข้อมูลลูกบ้านบ้านเลขที่ ${loggedInHouse || ''}</p>`;
 }
 
 // ===================== คำนวณหลอดสีวันหมดอายุ (Progress Bar) =====================
-/**
- * ฟังก์ชันสร้าง Progress Bar สีเขียว-ส้ม-แดง ตามวันหมดอายุของสมาชิก
- */
-// ===================== คำนวณหลอดสีวันหมดอายุ (Progress Bar) =====================
-/**
- * ฟังก์ชันแปลง สตริง "DD/MM/YYYY" เป็น Date Object ของ JavaScript อย่างถูกต้อง
- */
 function parseThaiDateStr(dateStr) {
     if (!dateStr) return new Date();
     const parts = dateStr.split('/');
-    // parts[0] = วัน, parts[1] = เดือน (ต้อง -1 เพราะ JS นับเดือน 0-11), parts[2] = ปี
     return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
 }
 
-/**
- * ฟังก์ชันสร้าง Progress Bar สีเขียว-ส้ม-แดง คำนวณเปอร์เซ็นต์และจำนวนวันถูกต้อง 100%
- */
 function createExpiryProgressBar(startDateStr, timeoutDateStr) {
     const start = parseThaiDateStr(startDateStr);
     const end = parseThaiDateStr(timeoutDateStr);
-    
-    // ตั้งเวลาปัจจุบันเป็น 00:00:00 เพื่อคำนวณจำนวนวันแบบเป๊ะๆ
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
 
-    // คำนวณระยะเวลาทั้งหมด (วัน) และ วันที่เหลืออยู่
     const totalDays = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
     const remainingDays = Math.round((end - today) / (1000 * 60 * 60 * 24));
 
-    // คำนวณเปอร์เซ็นต์ความยาวหลอด (0% - 100%)
     let percent = Math.min(100, Math.max(0, (remainingDays / totalDays) * 100));
 
-    // กำหนดสีหลอดตามเปอร์เซ็นต์ที่เหลืออยู่
-    let color = '#28a745'; // สีเขียว (หลอดเกือบเต็ม / สมาชิกยังเหลือเยอะ)
+    let color = '#28a745'; 
     if (percent <= 20 || remainingDays <= 7) {
-        color = '#dc3545'; // สีแดง (หลอดลดลงจนใกล้หมด)
+        color = '#dc3545'; 
     } else if (percent <= 60) {
-        color = '#ffc107'; // สีเหลือง/ส้ม (ปานกลาง)
+        color = '#ffc107'; 
     }
 
-    // กรณีหมดอายุแล้ว
     let statusText = `เหลืออีก ${remainingDays} วัน`;
     if (remainingDays <= 0) {
         percent = 0;
@@ -214,7 +191,6 @@ function createExpiryProgressBar(startDateStr, timeoutDateStr) {
 }
 
 // ===================== Render หน้ารายละเอียด user =====================
-
 function moreDetailsUser(id) {
     const user = mainData.find(u => u.id === id);
     const moreUserde = document.querySelector('#page-userDetail');
@@ -224,26 +200,32 @@ function moreDetailsUser(id) {
         return;
     }
 
-    // สร้างรายการยานพาหนะ
+    // สร้างรายการยานพาหนะ (กรองเฉพาะ Car ตัด Motorcycle ออกตามประชุม)
     let vehiclesHTML = '';
+    let carCount = 0;
+
     if (user.vehicles && user.vehicles.length > 0) {
         user.vehicles.forEach((v, index) => {
-            vehiclesHTML += `
-            <div class="headVlist">
-                <p class="Vlist">${v.plate}</p>
-                <p class="Vlist">${v.type}</p>
-                <a href="" data-target="vehicleDetail" data-car-index="${index}" data-id="${user.id}">แสดงข้อมูลเพิ่มเติม</a>
-            </div>`;
+            if (v.type === "Car") {  // <-- กรองเฉพาะรถยนต์
+                carCount++;
+                vehiclesHTML += `
+                <div class="headVlist">
+                    <p class="Vlist">${v.plate}</p>
+                    <p class="Vlist">${v.type}</p>
+                    <a href="" data-target="vehicleDetail" data-car-index="${index}" data-id="${user.id}">ดูประวัติเข้า-ออก</a>
+                </div>`;
+            }
         });
-    } else {
+    }
+
+    if (carCount === 0) {
         vehiclesHTML = `<div class="headVlist">
-                            <p class="Vlist">-</p>
+                            <p class="Vlist">ไม่มีข้อมูลรถยนต์</p>
                             <p class="Vlist">-</p>
                             <p></p>
                         </div>`;
     }
 
-    // สร้างหลอดคำนวณวันหมดอายุจากข้อมูลใน JSON โดยตรง
     const progressBar = createExpiryProgressBar(user.dateMember, user.MemberTimeout);
 
     moreUserde.innerHTML = `
@@ -266,7 +248,7 @@ function moreDetailsUser(id) {
                 ${progressBar}
             </section>
             <section class="vehicleUser">
-                <h1 class="vehicleList">รายละเอียดยานพาหนะ</h1>
+                <h1 class="vehicleList">รายละเอียดยานพาหนะ (เฉพาะรถยนต์)</h1>
                 <div class="headVlist">
                     <h3 class="Vlist">ป้ายทะเบียน</h3>
                     <h3 class="Vlist">ประเภทยานพาหนะ</h3>
@@ -276,8 +258,7 @@ function moreDetailsUser(id) {
             </section>`;
 }
 
-
-// แสดงข้อมูลรถแต่ละคัน
+// ===================== แสดงข้อมูลรถแต่ละคัน (Vehicle Detail) =====================
 function vDetail(id, carIndex) {
     const user = mainData.find(u => u.id === id);
     const pVdetail = document.querySelector("#page-vehicleDetail");
@@ -285,7 +266,7 @@ function vDetail(id, carIndex) {
         pVdetail.innerHTML = `<p class="loading-text">ไม่พบข้อมูล</p>`;
         return;
     }
-    const data = user.vehicles[carIndex];//เข้าถึงข้อมูลรถ
+    const data = user.vehicles[carIndex];
     if (!data) {
         pVdetail.innerHTML = `<p class="loading-text">ไม่พบข้อมูลยานพาหนะ</p>`;
         return;
@@ -293,160 +274,97 @@ function vDetail(id, carIndex) {
 
     let timeIn = '';
     let timeOut = '';
-    if (data.timeInOut.length > 0) {
+    if (data.timeInOut && data.timeInOut.length > 0) {
         data.timeInOut.forEach((t) => {
-            timeIn += `
-            <span class="time-record">${t.in}</span>
-            `
-            timeOut += `
-            <span class="time-record">${t.out}</span>
-            `
+            timeIn += `<span class="time-record">${t.in || '-'}</span>`;
+            timeOut += `<span class="time-record">${t.out || 'ยังไม่ออก'}</span>`;
         });
     } else {
-        timeIn += `
-            <span class="time-record">-</span>
-            `
-        timeOut += `
-        <span class="time-record">-</span>
-        `
+        timeIn += `<span class="time-record">-</span>`;
+        timeOut += `<span class="time-record">-</span>`;
     }
+
+    // แก้ไขลิงก์ปุ่มย้อนกลับ ให้เด้งกลับไปที่หน้า userDetail ของลูกบ้านคนนี้
     let page = `
-    <button class="back-btn"
-    onclick="showPage('userDetail',{
-    id:${id}
-    })">
+    <button class="back-btn" onclick="showPage('userDetail', { id: ${id} })">
     ← กลับ
     </button>
 
     <div class="vehicle-card">
-    <!-- head -->
-    <div class="v-title">Vehicle information.</div>
-    <div class="v-date">Register : ${data.regitter ?? '-'} </div>
-    
-    <!-- time -->
-    <div class="v-grid">
-    <div class="v-item">ป้ายทะเบียน : ${data.plate}</div>
-    <div class="v-item">ประเภท : ${data.type}</div>
-    
-    <div class="v-item">เวลาเข้า</div>
-    <div class="v-item">เวลาออก</div>
-    
-    <!-- Box สำหรับเวลาเข้า-->
-    <div class="v-item v-time" id="time-in-list">
-    ${timeIn}
-    </div>
-    
-    <!-- Box สำหรับเวลาออก -->
-    <div class="v-item v-time" id="time-out-list">
-    ${timeOut}
-    </div>
-    </div>
+        <div class="v-title">ข้อมูลการเข้า-ออกของรถยนต์</div>
+        <div class="v-date">Register : ${data.regitter ?? '-'} </div>
+        
+        <div class="v-grid">
+            <div class="v-item">ป้ายทะเบียน : ${data.plate}</div>
+            <div class="v-item">ประเภท : ${data.type}</div>
+            
+            <div class="v-item">เวลาเข้า</div>
+            <div class="v-item">เวลาออก</div>
+            
+            <div class="v-item v-time" id="time-in-list">${timeIn}</div>
+            <div class="v-item v-time" id="time-out-list">${timeOut}</div>
+        </div>
     </div>`;
     pVdetail.innerHTML = page;
 }
 
-// Render หน้า VEHICLE DATA
-function renderVehicleList() {
-    const vContainer = document.querySelector("#vehicleList");
-    let html = "";
-    mainData.forEach(user => {
-        user.vehicles.forEach((v, index) => {
-            html += `
-            <div class="User" style="min-width: unset; margin: 10px 20px;">
-                <h2>${v.plate}</h2>
-                <h2>${v.type} (บ้าน ${user.houseNumber})</h2>
-                <a href="#" data-id="${user.id}" data-car-index="${index}" data-target="vehicleDetail">ดูการเข้า-ออก</a>
-            </div>`;
-        });
-    });
-    vContainer.innerHTML = html || `<p class="loading-text">ไม่พบข้อมูลยานพาหนะ</p>`;
-}
-
-// ฟังก์ชันกรอง/ค้นหาข้อมูลลูกบ้าน
+// ฟังก์ชันค้นหาลูกบ้าน
 function filterUsers() {
     const keyword = document.getElementById("searchUser").value.toLowerCase();
     const filtered = mainData.filter(u => 
-        u.houseNumber.toLowerCase().includes(keyword) || 
-        u.ownerName.toLowerCase().includes(keyword)
+        (u.houseNumber.toLowerCase().includes(keyword) || u.ownerName.toLowerCase().includes(keyword)) &&
+        (!loggedInHouse || u.houseNumber === loggedInHouse)
     );
     updateData(filtered);
 }
 
-// ===================== Event delegation สำหรับลิงก์ในรายการ user =====================
-// ใช้วิธี delegate ที่ #UserData ตัวเดียว แทนการผูก event ให้ทุก <a> ที่สร้างขึ้นใหม่
-// เพราะ element พวกนี้ถูกสร้างใหม่ทุกครั้งที่ updateData() รันใหม่
+// ===================== Event Delegation สำหรับลิงก์ทั้งหมด =====================
 document.querySelector('.main-content').addEventListener('click', (e) => {
     const link = e.target.closest('a[data-target]');
     if (!link) return;
     e.preventDefault();
 
     const { target, ...params } = link.dataset;
-
-    console.log(`target:${target}`);
-    console.log(`params:`, params);
     showPage(target, params);
 });
 
-// เริ่มโหลดข้อมูลทันทีที่สคริปต์รัน
-load(url);
-
-
-/* ==========================================
-Dashboard
-========================================== */
-
-function renderDashboard() {
-    // 1. สรุปจำนวนลูกบ้านทั้งหมด
-    document.getElementById("residentTotal").textContent = mainData.length;
-
+// ===================== Render Dashboard (คำนวณเฉพาะ Car) =====================
+function renderDashboard(dataList) {
     let vehicleTotal = 0;
     let carIn = 0;
     let carOut = 0;
-    let expire = 0;
     let insideVillageCount = 0;
 
-    const today = new Date();
-
-    // ลูปตรวจเช็คข้อมูลลูกบ้านและรถทุกคัน
-    mainData.forEach(user => {
-        vehicleTotal += user.vehicles.length;
-
+    dataList.forEach(user => {
         user.vehicles.forEach(vehicle => {
-            if (vehicle.timeInOut && vehicle.timeInOut.length > 0) {
-                vehicle.timeInOut.forEach(log => {
-                    if (log.in) carIn++;   // ถ้าระบุเวลาเข้า ให้นับยอดเข้า
-                    if (log.out) carOut++; // ถ้าระบุเวลาออก ให้นับยอดออก
-                    
-                    // ถ้ารถมีการเข้าแต่ยังไม่ออก (หรือออกหลังสุดเป็นค่าว่าง) ให้นับว่าอยู่ในหมู่บ้าน
-                    if (log.in && !log.out) {
-                        insideVillageCount++;
-                    }
-                });
+            // กรองนับสถิติเฉพาะ "Car"
+            if (vehicle.type === "Car") {
+                vehicleTotal++;
+                if (vehicle.timeInOut && vehicle.timeInOut.length > 0) {
+                    vehicle.timeInOut.forEach(log => {
+                        if (log.in) carIn++;
+                        if (log.out) carOut++;
+                        if (log.in && !log.out) insideVillageCount++;
+                    });
+                }
             }
         });
 
-        // ตรวจสอบวันหมดอายุบัตรสมาชิก (ใกล้หมดอายุภายใน 30 วัน)
-        if (user.MemberTimeout) {
-            const [day, month, year] = user.MemberTimeout.split("/");
-            const expireDate = new Date(year, month - 1, day);
-            const diffDays = (expireDate - today) / (1000 * 60 * 60 * 24);
-
-            if (diffDays <= 30 && diffDays >= 0) {
-                expire++;
-            }
-        }
+        // ดึงสถานะสมาชิกของบ้านที่ล็อกอินอยู่
+        document.getElementById("residentStatus").textContent = user.memberStatus || 'Active';
+        document.getElementById("expireDateText").textContent = user.MemberTimeout || '-';
     });
 
-    // แสดงผลข้อมูลลงใน Dashboard
     document.getElementById("vehicleTotal").textContent = vehicleTotal;
     document.getElementById("carIn").textContent = carIn;
     document.getElementById("carOut").textContent = carOut;
-    document.getElementById("expireTotal").textContent = expire;
     document.getElementById("insideVillage").textContent = insideVillageCount;
 
-    // แสดงวันที่ปัจจุบัน
-    document.getElementById("todayDate").textContent =
-        new Date().toLocaleDateString("th-TH", {
-            dateStyle: "full"
-        });
+    document.getElementById("welcomeText").textContent = loggedInHouse ? `Dashboard (บ้านเลขที่ ${loggedInHouse})` : "Resident Dashboard";
+    document.getElementById("todayDate").textContent = new Date().toLocaleDateString("th-TH", { dateStyle: "full" });
 }
+
+// เริ่มต้นเช็คสถานะและโหลดข้อมูล
+checkLoginState();
+showPage('home');
+load(url);
