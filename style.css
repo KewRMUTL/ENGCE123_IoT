@@ -37,8 +37,11 @@ header {
     height: 80px;
 }
 
-.header-icon {
-    font-size: 28px;
+.header-logo {
+    height: 45px;
+    width: auto;
+    max-width: 150px;
+    object-fit: contain;
 }
 
 .head-content {
@@ -98,49 +101,10 @@ nav ul .user-select {
     border: solid 2px var(--color-white);
 }
 
-.user-details.active {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.user-details.active .User, .user-details.active .headUserData {
-    display: grid;
-    grid-template-columns: 8rem 8rem 1fr;
-    align-items: center;
-    background-color: var(--color-primary);
-    margin: 10px;
-    padding: 10px 20px;
-    min-width: 90%;
-    border-radius: 8px;
-}
-
-.user-details.active .User h2, .user-details.active .headUserData h2 {
-    color: var(--color-white);
-    margin: 0;
-}
-
-.user-details.active .User a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    justify-self: end;
-    background-color: var(--color-white);
-    color: var(--color-primary);
-    text-decoration: none;
-    border-radius: 24px;
-    padding: 10px 20px;
-    font-weight: 500;
-}
-
-.moreUserde.active .homeDetail {
-    display: flex;
-    flex-direction: column;
-}
-
-.moreUserde.active .homeDetail .homeNumber,
-.moreUserde.active .homeDetail .nameOwner,
-.moreUserde.active .homeDetail .TimeData {
+/* UI ส่วนรายละเอียดบ้าน */
+.homeDetail .homeNumber,
+.homeDetail .nameOwner,
+.homeDetail .TimeData {
     display: flex;
     flex-direction: row;
     background-color: var(--color-primary);
@@ -148,7 +112,7 @@ nav ul .user-select {
     border-radius: 6px;
 }
 
-.moreUserde.active .homeDetail .homeList {
+.homeDetail .homeList {
     box-sizing: border-box;
     color: var(--color-white);
     padding: 15px 20px;
@@ -156,11 +120,11 @@ nav ul .user-select {
     font-size: 1.1rem;
 }
 
-.moreUserde.active .vehicleUser {
+.vehicleUser {
     margin-top: 10px;
 }
 
-.moreUserde.active .vehicleUser .vehicleList {
+.vehicleUser .vehicleList {
     margin: 1rem 1rem 0;
     color: var(--color-white);
     background-color: var(--color-primary);
@@ -168,7 +132,7 @@ nav ul .user-select {
     padding: 10px 0;
 }
 
-.moreUserde.active .vehicleUser .headVlist {
+.vehicleUser .headVlist {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
@@ -177,7 +141,7 @@ nav ul .user-select {
     border-radius: 6px;
 }
 
-.moreUserde.active .vehicleUser .headVlist .Vlist {
+.vehicleUser .headVlist .Vlist {
     color: var(--color-white);
     padding: 10px;
     margin: 0;
@@ -185,7 +149,7 @@ nav ul .user-select {
     font-size: 1.2rem;
 }
 
-.moreUserde.active .vehicleUser .headVlist a {
+.vehicleUser .headVlist a, .qr-btn {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -195,8 +159,34 @@ nav ul .user-select {
     border-radius: 14px;
     padding: 10px;
     margin: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: "Prompt";
 }
 
+.qr-section {
+    margin: 1rem;
+    text-align: center;
+}
+
+.qr-btn-generate {
+    background-color: #28a745;
+    color: white;
+    font-size: 16px;
+    padding: 12px 25px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-family: "Prompt";
+    transition: 0.2s;
+}
+
+.qr-btn-generate:hover {
+    background-color: #218838;
+}
+
+/* Vehicle Card */
 #page-vehicleDetail {
     background-color: var(--color-bg); 
     padding: 30px 20px;
@@ -247,6 +237,7 @@ nav ul .user-select {
     border-bottom: none;
 }
 
+/* Dashboard */
 .dashboard {
     padding: 20px;
 }
@@ -351,9 +342,13 @@ nav ul .user-select {
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
-.logo-circle {
-    font-size: 40px;
-    margin-bottom: 10px;
+.login-logo {
+    height: 70px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    margin: 0 auto 15px auto;
+    display: block;
 }
 
 .auth-tabs {
@@ -411,35 +406,4 @@ nav ul .user-select {
 
 .submit-btn:hover {
     background-color: var(--color-secondary);
-}
-
-
-/* =========================================
-คุมขนาดโลโก้ (Header & Login) ไม่ให้ขยายใหญ่มหึมา
-========================================= */
-
-/* โลโก้ใน Header ด้านบน */
-.header-logo {
-    height: 45px;
-    width: auto;
-    max-width: 150px;
-    object-fit: contain;
-    display: block;
-}
-
-.logo-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-}
-
-/* โลโก้ใน ป๊อปอัพ Login / Register */
-.login-logo {
-    height: 70px;
-    width: auto;
-    max-width: 200px;
-    object-fit: contain;
-    margin: 0 auto 15px auto;
-    display: block;
 }
