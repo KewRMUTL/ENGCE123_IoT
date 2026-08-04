@@ -13,7 +13,7 @@
         "plate": "1กข 1111",
         "type": "Car",
         "registerDate": "2025-10-15",
-        "timeInOut": [
+        "logs": [
           { "id": 1001, "vehicle_id": 101, "time_in": "2026-07-28 15:00", "time_out": "2026-07-28 19:00" },
           { "id": 1002, "vehicle_id": 101, "time_in": "2026-07-27 12:00", "time_out": "2026-07-27 19:00" }
         ]
@@ -24,7 +24,7 @@
         "plate": "2ขค 58",
         "type": "Motorcycle",
         "registerDate": "2025-10-15",
-        "timeInOut": [
+        "logs": [
           { "id": 1003, "vehicle_id": 102, "time_in": "2026-07-28 15:00", "time_out": null }
         ]
       }
@@ -44,7 +44,7 @@
         "plate": "กท 9999",
         "type": "Car",
         "registerDate": "2026-01-01",
-        "timeInOut": [
+        "logs": [
           { "id": 1004, "vehicle_id": 103, "time_in": "2026-07-28 15:00", "time_out": "2026-07-28 19:00" }
         ]
       }
@@ -73,7 +73,7 @@
         "plate": "3กด 4321",
         "type": "Car",
         "registerDate": "2025-01-01",
-        "timeInOut": [
+        "logs": [
           { "id": 1005, "vehicle_id": 104, "time_in": "2026-07-28 08:30", "time_out": "2026-07-28 17:00" }
         ]
       }
