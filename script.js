@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let mainData = [];
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
-    // Elements
+    // DOM Elements
     const authModal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const pages = document.querySelectorAll('.page');
     const searchUser = document.getElementById('searchUser');
 
+    // จัดการการแสดงผลการล็อกอิน
     function updateAuthUI() {
         if (currentUser) {
             if (authModal) authModal.style.display = 'none';
@@ -26,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // แท็บ สลับระหว่าง Login / Register
     if (tabLoginBtn && tabRegisterBtn) {
         tabLoginBtn.addEventListener('click', () => {
             tabLoginBtn.classList.add('active');
@@ -42,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ล็อกอิน
+    // ล็อกอิน (ค้นหาจาก houseNumber หรือ ownerName ในตาราง Users)
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -60,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ลงทะเบียนลูกบ้านใหม่ (สร้างข้อมูลอ้างอิงตาราง Users)
+    // ลงทะเบียน (เพิ่มแถวใหม่ในโครงสร้างตาราง Users)
     if (registerForm) {
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -95,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // สลับหน้าในระบบ (Single Page Application)
     function renderPage(target, params = null) {
         pages.forEach(page => page.classList.remove('active'));
         navItems.forEach(li => li.classList.remove('user-select'));
@@ -127,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // ฟังก์ชันแปลง Date
+    // Helper: แปลงสตริงวันที่
     function parseDate(dateStr) {
         if (!dateStr) return new Date();
         if (dateStr.includes('-')) return new Date(dateStr);
@@ -141,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return d.toLocaleDateString('th-TH');
     }
 
-    // สร้าง Progress Bar คำนวณวันหมดอายุ
+    // คำนวณวันหมดอายุบัตรสมาชิก (ใช้วันจาก memberStartDate และ memberExpireDate ของตาราง Users)
     function createExpiryProgressBar(startDateStr, timeoutDateStr) {
         const start = parseDate(startDateStr);
         const end = parseDate(timeoutDateStr);
@@ -175,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>`;
     }
 
+    // Render ตาราง Users
     function renderUserList(data) {
         const UserData = document.querySelector('#UserData');
         if (!UserData) return;
@@ -190,6 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
         UserData.innerHTML = html || `<p class="loading-text">ไม่พบข้อมูล</p>`;
     }
 
+    // Render หน้ารายละเอียดลูกบ้าน (ตาราง Users + ตาราง Vehicles)
     function renderUserDetail(id) {
         const user = mainData.find(u => u.id === id) || currentUser;
         const moreUserde = document.querySelector('#page-userDetail');
@@ -252,6 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('btnBackToUser')?.addEventListener('click', () => renderPage('user'));
     }
 
+    // Render ประวัติรถ (ตาราง Vehicles + ตาราง Vehicle_Logs)
     function renderVehicleDetail(id, carIndex) {
         const user = mainData.find(u => u.id === id) || currentUser;
         const pVdetail = document.querySelector("#page-vehicleDetail");
@@ -261,10 +267,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!data) return;
 
         let timeIn = '', timeOut = '';
-        if (data.timeInOut && data.timeInOut.length > 0) {
-            data.timeInOut.forEach((t) => {
-                timeIn += `<span class="time-record">${t.time_in || '-'}</span>`;
-                timeOut += `<span class="time-record">${t.time_out || 'ยังไม่ออก'}</span>`;
+        if (data.logs && data.logs.length > 0) {
+            data.logs.forEach((log) => {
+                timeIn += `<span class="time-record">${log.time_in || '-'}</span>`;
+                timeOut += `<span class="time-record">${log.time_out || 'ยังไม่ออก'}</span>`;
             });
         } else {
             timeIn = `<span class="time-record">-</span>`;
@@ -278,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="v-date">วันที่ลงทะเบียนรถ : ${formatDateDisplay(data.registerDate)} </div>
             <div class="v-grid">
                 <div class="v-item">ป้ายทะเบียน : ${data.plate}</div>
-                <div class="v-item">ประเภท : รถ</div>
+                <div class="v-item">ประเภท : ${data.type}</div>
                 <div class="v-item">เวลาเข้า</div>
                 <div class="v-item">เวลาออก</div>
                 <div class="v-item v-time">${timeIn}</div>
@@ -289,6 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('btnBackToDetail')?.addEventListener('click', () => renderPage('userDetail', { id: id }));
     }
 
+    // Render สรุปหน้า Dashboard
     function renderDashboard(dataList) {
         let vehicleTotal = 0, carIn = 0, carOut = 0, insideVillageCount = 0;
 
@@ -297,8 +304,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 user.vehicles.forEach(vehicle => {
                     if (vehicle.type === "Car") {
                         vehicleTotal++;
-                        if (vehicle.timeInOut && vehicle.timeInOut.length > 0) {
-                            vehicle.timeInOut.forEach(log => {
+                        if (vehicle.logs && vehicle.logs.length > 0) {
+                            vehicle.logs.forEach(log => {
                                 if (log.time_in) carIn++;
                                 if (log.time_out) carOut++;
                                 if (log.time_in && !log.time_out) insideVillageCount++;
@@ -311,7 +318,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const statusElem = document.getElementById("residentStatus");
             const expireElem = document.getElementById("expireDateText");
             
-            // เช็คสถานะการเป็นสมาชิกอัตโนมัติจาก memberExpireDate
             const expDate = parseDate(user.memberExpireDate);
             const isExpired = expDate < new Date();
 
@@ -327,6 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("todayDate").textContent = new Date().toLocaleDateString("th-TH", { dateStyle: "full" });
     }
 
+    // Event Delegations
     document.querySelector('.main-content')?.addEventListener('click', (e) => {
         const link = e.target.closest('a[data-target]');
         if (!link) return;
@@ -346,6 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Fetch ดึงข้อมูล JSON
     fetch(url)
         .then(res => res.json())
         .then(data => {
