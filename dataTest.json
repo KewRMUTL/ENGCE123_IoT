@@ -1,100 +1,91 @@
 [
   {
     "id": 1,
-    "username": "user1",
-    "password": "pass123",
     "houseNumber": "158/1",
     "ownerName": "สมหมาย ดีใจ",
-    "phone": "0812345678",
-    "profile": "assets/images/profile.png",
-    "regitter": "15/10/2025",
-    "dateMember": "15/10/2025",
-    "MemberTimeout": "15/11/2026",
-    "memberStatus": "Active",
+    "registerDate": "2025-10-15",
+    "memberStartDate": "2025-10-15",
+    "memberExpireDate": "2026-11-15",
     "vehicles": [
       {
+        "id": 101,
+        "user_id": 1,
         "plate": "1กข 1111",
         "type": "Car",
-        "regitter": "15/10/2025",
+        "registerDate": "2025-10-15",
         "timeInOut": [
-          { "date": "2026-07-28", "in": "15:00", "out": "19:00", "gate": "Main Gate" },
-          { "date": "2026-07-27", "in": "12:00", "out": "19:00", "gate": "Main Gate" }
+          { "id": 1001, "vehicle_id": 101, "time_in": "2026-07-28 15:00", "time_out": "2026-07-28 19:00" },
+          { "id": 1002, "vehicle_id": 101, "time_in": "2026-07-27 12:00", "time_out": "2026-07-27 19:00" }
+        ]
+      },
+      {
+        "id": 102,
+        "user_id": 1,
+        "plate": "2ขค 58",
+        "type": "Motorcycle",
+        "registerDate": "2025-10-15",
+        "timeInOut": [
+          { "id": 1003, "vehicle_id": 102, "time_in": "2026-07-28 15:00", "time_out": null }
         ]
       }
     ]
   },
   {
     "id": 2,
-    "username": "user2",
-    "password": "pass123",
     "houseNumber": "158/2",
     "ownerName": "สมชาย ใจดี",
-    "phone": "0823456789",
-    "profile": "assets/images/profile.png",
-    "regitter": "01/01/2026",
-    "dateMember": "01/01/2026",
-    "MemberTimeout": "20/08/2026",
-    "memberStatus": "Active",
+    "registerDate": "2026-01-01",
+    "memberStartDate": "2026-01-01",
+    "memberExpireDate": "2026-08-20",
     "vehicles": [
       {
+        "id": 103,
+        "user_id": 2,
         "plate": "กท 9999",
         "type": "Car",
-        "regitter": "01/01/2026",
+        "registerDate": "2026-01-01",
         "timeInOut": [
-          { "date": "2026-07-28", "in": "15:00", "out": "19:00", "gate": "Main Gate" }
+          { "id": 1004, "vehicle_id": 103, "time_in": "2026-07-28 15:00", "time_out": "2026-07-28 19:00" }
         ]
       }
     ]
   },
   {
     "id": 3,
-    "username": "user3",
-    "password": "pass123",
     "houseNumber": "158/3",
     "ownerName": "สมหญิง รักสงบ",
-    "phone": "0834567890",
-    "profile": "assets/images/profile.png",
-    "regitter": "01/08/2025",
-    "dateMember": "01/08/2025",
-    "MemberTimeout": "10/08/2026",
-    "memberStatus": "Active",
+    "registerDate": "2025-08-01",
+    "memberStartDate": "2025-08-01",
+    "memberExpireDate": "2026-08-10",
     "vehicles": []
   },
   {
     "id": 4,
-    "username": "user4",
-    "password": "pass123",
     "houseNumber": "158/4",
     "ownerName": "อนันต์ มั่งคั่ง",
-    "phone": "0845678901",
-    "profile": "assets/images/profile.png",
-    "regitter": "01/01/2025",
-    "dateMember": "01/01/2025",
-    "MemberTimeout": "01/06/2026",
-    "memberStatus": "Expired",
+    "registerDate": "2025-01-01",
+    "memberStartDate": "2025-01-01",
+    "memberExpireDate": "2026-06-01",
     "vehicles": [
       {
+        "id": 104,
+        "user_id": 4,
         "plate": "3กด 4321",
         "type": "Car",
-        "regitter": "01/01/2025",
+        "registerDate": "2025-01-01",
         "timeInOut": [
-          { "date": "2026-07-28", "in": "08:30", "out": "17:00", "gate": "Main Gate" }
+          { "id": 1005, "vehicle_id": 104, "time_in": "2026-07-28 08:30", "time_out": "2026-07-28 17:00" }
         ]
       }
     ]
   },
   {
     "id": 5,
-    "username": "user5",
-    "password": "pass123",
     "houseNumber": "158/5",
     "ownerName": "วิภาดา สุขสันต์",
-    "phone": "0856789012",
-    "profile": "assets/images/profile.png",
-    "regitter": "10/01/2026",
-    "dateMember": "10/01/2026",
-    "MemberTimeout": "31/12/2026",
-    "memberStatus": "Active",
+    "registerDate": "2026-01-10",
+    "memberStartDate": "2026-01-10",
+    "memberExpireDate": "2026-12-31",
     "vehicles": []
   }
 ]
