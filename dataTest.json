@@ -1,6 +1,8 @@
 [
   {
     "id": 1,
+    "username": "158/1",
+    "password": "pass123",
     "houseNumber": "158/1",
     "ownerName": "สมหมาย ดีใจ",
     "registerDate": "2025-10-15",
@@ -17,21 +19,13 @@
           { "id": 1001, "vehicle_id": 101, "time_in": "2026-07-28 15:00", "time_out": "2026-07-28 19:00" },
           { "id": 1002, "vehicle_id": 101, "time_in": "2026-07-27 12:00", "time_out": "2026-07-27 19:00" }
         ]
-      },
-      {
-        "id": 102,
-        "user_id": 1,
-        "plate": "2ขค 58",
-        "type": "Motorcycle",
-        "registerDate": "2025-10-15",
-        "logs": [
-          { "id": 1003, "vehicle_id": 102, "time_in": "2026-07-28 15:00", "time_out": null }
-        ]
       }
     ]
   },
   {
     "id": 2,
+    "username": "158/2",
+    "password": "pass123",
     "houseNumber": "158/2",
     "ownerName": "สมชาย ใจดี",
     "registerDate": "2026-01-01",
@@ -49,43 +43,5 @@
         ]
       }
     ]
-  },
-  {
-    "id": 3,
-    "houseNumber": "158/3",
-    "ownerName": "สมหญิง รักสงบ",
-    "registerDate": "2025-08-01",
-    "memberStartDate": "2025-08-01",
-    "memberExpireDate": "2026-08-10",
-    "vehicles": []
-  },
-  {
-    "id": 4,
-    "houseNumber": "158/4",
-    "ownerName": "อนันต์ มั่งคั่ง",
-    "registerDate": "2025-01-01",
-    "memberStartDate": "2025-01-01",
-    "memberExpireDate": "2026-06-01",
-    "vehicles": [
-      {
-        "id": 104,
-        "user_id": 4,
-        "plate": "3กด 4321",
-        "type": "Car",
-        "registerDate": "2025-01-01",
-        "logs": [
-          { "id": 1005, "vehicle_id": 104, "time_in": "2026-07-28 08:30", "time_out": "2026-07-28 17:00" }
-        ]
-      }
-    ]
-  },
-  {
-    "id": 5,
-    "houseNumber": "158/5",
-    "ownerName": "วิภาดา สุขสันต์",
-    "registerDate": "2026-01-10",
-    "memberStartDate": "2026-01-10",
-    "memberExpireDate": "2026-12-31",
-    "vehicles": []
   }
 ]
