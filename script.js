@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let mainData = [];
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
+    // Elements
     const authModal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
@@ -17,11 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateAuthUI() {
         if (currentUser) {
-            authModal.style.display = 'none';
-            logoutBtn.style.display = 'block';
+            if (authModal) authModal.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
         } else {
-            authModal.style.display = 'flex';
-            logoutBtn.style.display = 'none';
+            if (authModal) authModal.style.display = 'flex';
+            if (logoutBtn) logoutBtn.style.display = 'none';
         }
     }
 
@@ -41,17 +42,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ล็อกอิน: เช็คทั้ง Username/เลขบ้าน และ Password ให้ถูกต้อง
+    // ล็อกอิน
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const inputUsername = document.getElementById('loginUsername').value.trim();
-            const inputPassword = document.getElementById('loginPassword').value.trim();
-
-            const user = mainData.find(u => 
-                (u.username === inputUsername || u.houseNumber === inputUsername) &&
-                (u.password === inputPassword || inputPassword === "pass123")
-            );
+            const houseNo = document.getElementById('loginUsername').value.trim();
+            const user = mainData.find(u => u.houseNumber === houseNo || u.ownerName.includes(houseNo));
 
             if (user) {
                 currentUser = user;
@@ -59,40 +55,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateAuthUI();
                 renderPage('home');
             } else {
-                alert('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง! (ลองใช้ Username: user1 / Password: pass123)');
+                alert('ไม่พบข้อมูลบ้านเลขที่นี้ (เช่น 158/1)');
             }
         });
     }
 
-    // ลงทะเบียน: สร้างบัญชีและรหัสผ่านใหม่
+    // ลงทะเบียนลูกบ้านใหม่ (สร้างข้อมูลอ้างอิงตาราง Users)
     if (registerForm) {
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const houseNo = document.getElementById('regHouseNo').value.trim();
             const name = document.getElementById('regName').value.trim();
-            const phone = document.getElementById('regPhone').value.trim();
-            const regUser = document.getElementById('regUsername').value.trim();
-            const regPass = document.getElementById('regPassword').value.trim();
+            const todayStr = new Date().toISOString().split('T')[0];
 
             const newUser = {
                 id: mainData.length + 1,
-                username: regUser || `user${mainData.length + 1}`,
-                password: regPass || "pass123",
                 houseNumber: houseNo,
                 ownerName: name,
-                phone: phone,
-                profile: "assets/images/profile.png",
-                regitter: new Date().toLocaleDateString('th-TH'),
-                dateMember: new Date().toLocaleDateString('th-TH'),
-                MemberTimeout: "31/12/2026",
-                memberStatus: "Active",
+                registerDate: todayStr,
+                memberStartDate: todayStr,
+                memberExpireDate: "2026-12-31",
                 vehicles: []
             };
 
             mainData.push(newUser);
             currentUser = newUser;
             localStorage.setItem('currentUser', JSON.stringify(newUser));
-            alert('ลงทะเบียนและเข้าสู่ระบบสำเร็จ!');
+            alert('ลงทะเบียนสำเร็จ!');
             updateAuthUI();
             renderPage('home');
         });
@@ -138,15 +127,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    function parseThaiDateStr(dateStr) {
+    // ฟังก์ชันแปลง Date
+    function parseDate(dateStr) {
         if (!dateStr) return new Date();
+        if (dateStr.includes('-')) return new Date(dateStr);
         const parts = dateStr.split('/');
         return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
     }
 
+    function formatDateDisplay(dateStr) {
+        if (!dateStr) return '-';
+        const d = parseDate(dateStr);
+        return d.toLocaleDateString('th-TH');
+    }
+
+    // สร้าง Progress Bar คำนวณวันหมดอายุ
     function createExpiryProgressBar(startDateStr, timeoutDateStr) {
-        const start = parseThaiDateStr(startDateStr);
-        const end = parseThaiDateStr(timeoutDateStr);
+        const start = parseDate(startDateStr);
+        const end = parseDate(timeoutDateStr);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -168,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `
         <div class="expire-progress-box">
             <div class="expire-info">
-                <span>สถานะบัตรสมาชิก (หมดอายุ: ${timeoutDateStr})</span>
+                <span>สถานะบัตรสมาชิก (หมดอายุ: ${formatDateDisplay(timeoutDateStr)})</span>
                 <span><b>${statusText}</b></span>
             </div>
             <div class="progress-track">
@@ -222,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>`;
         }
 
-        const progressBar = createExpiryProgressBar(user.dateMember, user.MemberTimeout);
+        const progressBar = createExpiryProgressBar(user.memberStartDate, user.memberExpireDate);
 
         moreUserde.innerHTML = `
                 <button type="button" class="back-btn" id="btnBackToUser">← กลับ</button>
@@ -236,8 +234,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         <p class="homeList">${user.ownerName}</p>
                     </div>
                     <div class="TimeData">
-                        <p class="homeList">วันที่เข้าอยู่ ${user.regitter ?? '-'}</p>
-                        <p class="homeList">วันที่สมัครสมาชิก ${user.dateMember ?? '-'} | วันหมดอายุ ${user.MemberTimeout ?? '-'}</p>
+                        <p class="homeList">วันที่เข้าอยู่: ${formatDateDisplay(user.registerDate)}</p>
+                        <p class="homeList">วันที่เริ่มสมาชิก: ${formatDateDisplay(user.memberStartDate)} | หมดอายุ: ${formatDateDisplay(user.memberExpireDate)}</p>
                     </div>
                     ${progressBar}
                 </section>
@@ -265,8 +263,8 @@ document.addEventListener("DOMContentLoaded", () => {
         let timeIn = '', timeOut = '';
         if (data.timeInOut && data.timeInOut.length > 0) {
             data.timeInOut.forEach((t) => {
-                timeIn += `<span class="time-record">${t.in || '-'}</span>`;
-                timeOut += `<span class="time-record">${t.out || 'ยังไม่ออก'}</span>`;
+                timeIn += `<span class="time-record">${t.time_in || '-'}</span>`;
+                timeOut += `<span class="time-record">${t.time_out || 'ยังไม่ออก'}</span>`;
             });
         } else {
             timeIn = `<span class="time-record">-</span>`;
@@ -277,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <button type="button" class="back-btn" id="btnBackToDetail">← กลับ</button>
         <div class="vehicle-card">
             <div class="v-title">ประวัติการเข้า-ออก</div>
-            <div class="v-date">วันลงทะเบียน : ${data.regitter ?? '-'} </div>
+            <div class="v-date">วันที่ลงทะเบียนรถ : ${formatDateDisplay(data.registerDate)} </div>
             <div class="v-grid">
                 <div class="v-item">ป้ายทะเบียน : ${data.plate}</div>
                 <div class="v-item">ประเภท : รถ</div>
@@ -301,9 +299,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         vehicleTotal++;
                         if (vehicle.timeInOut && vehicle.timeInOut.length > 0) {
                             vehicle.timeInOut.forEach(log => {
-                                if (log.in) carIn++;
-                                if (log.out) carOut++;
-                                if (log.in && !log.out) insideVillageCount++;
+                                if (log.time_in) carIn++;
+                                if (log.time_out) carOut++;
+                                if (log.time_in && !log.time_out) insideVillageCount++;
                             });
                         }
                     }
@@ -312,8 +310,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const statusElem = document.getElementById("residentStatus");
             const expireElem = document.getElementById("expireDateText");
-            if (statusElem) statusElem.textContent = user.memberStatus || 'Active';
-            if (expireElem) expireElem.textContent = user.MemberTimeout || '-';
+            
+            // เช็คสถานะการเป็นสมาชิกอัตโนมัติจาก memberExpireDate
+            const expDate = parseDate(user.memberExpireDate);
+            const isExpired = expDate < new Date();
+
+            if (statusElem) statusElem.textContent = isExpired ? 'Expired' : 'Active';
+            if (expireElem) expireElem.textContent = formatDateDisplay(user.memberExpireDate);
         });
 
         document.getElementById("vehicleTotal").textContent = vehicleTotal;
