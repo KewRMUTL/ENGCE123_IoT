@@ -5,7 +5,8 @@
     --color-secondary: #29356c;    
     --color-bg: #fffded;           
     --color-white: #ffffff;
-    --color-border: rgb(192, 192, 192);
+    --color-border: #d0d7de;
+    --color-shadow: rgba(0, 46, 94, 0.15);
 }
 
 body {
@@ -13,6 +14,7 @@ body {
     padding: 0;
     background-color: var(--color-bg);
     font-family: "Prompt", sans-serif;
+    color: #333;
 }
 
 h1, h2, h3, h4, h5, h6, p {
@@ -27,6 +29,7 @@ h1, h2, h3, h4, h5, h6, p {
     display: block;
 }
 
+/* Header */
 header {
     box-sizing: border-box;
     display: flex;
@@ -35,6 +38,7 @@ header {
     background-color: var(--color-primary);
     padding: 0 30px;
     height: 80px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .header-logo {
@@ -50,22 +54,26 @@ header {
     margin: 0;
     color: var(--color-white);
     font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .logout-btn {
     background: var(--color-white);
     color: var(--color-primary);
     border: none;
-    padding: 8px 18px;
+    padding: 8px 20px;
     border-radius: 20px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .logout-btn:hover {
-    background: #e0e0e0;
+    background: #e6ecf2;
+    transform: translateY(-1px);
 }
 
 .main-content {
@@ -76,6 +84,7 @@ header {
 
 nav {
     background-color: var(--color-secondary);
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
 }
 
 nav ul {
@@ -88,20 +97,35 @@ nav ul li {
     color: var(--color-primary);
     text-align: center;
     list-style-type: none;
-    margin: 10px 5px;
-    font-size: 20px;
-    font-weight: 500;
-    padding: 20px;
+    margin: 12px 10px;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 16px;
     cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+nav ul li:hover {
+    background-color: #f0f4f8;
 }
 
 nav ul .user-select {
     background-color: var(--color-primary);
     color: var(--color-white);
-    border: solid 2px var(--color-white);
+    border: 2px solid var(--color-white);
+    box-shadow: 0 4px 10px var(--color-shadow);
 }
 
-/* UI ส่วนรายละเอียดบ้าน */
+.form-group-label {
+    text-align: left;
+    font-size: 13px;
+    color: #444;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+/* User Details Card */
 .homeDetail .homeNumber,
 .homeDetail .nameOwner,
 .homeDetail .TimeData {
@@ -109,84 +133,113 @@ nav ul .user-select {
     flex-direction: row;
     background-color: var(--color-primary);
     margin: 1rem 1rem 0;
-    border-radius: 6px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px var(--color-shadow);
 }
 
 .homeDetail .homeList {
     box-sizing: border-box;
     color: var(--color-white);
-    padding: 15px 20px;
+    padding: 16px 20px;
     font-weight: 600;
     font-size: 1.1rem;
 }
 
 .vehicleUser {
-    margin-top: 10px;
+    margin-top: 15px;
+}
+
+.vehicle-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-primary);
+    margin: 1rem 1rem 0;
+    padding: 10px 20px;
+    border-radius: 8px 8px 0 0;
 }
 
 .vehicleUser .vehicleList {
-    margin: 1rem 1rem 0;
     color: var(--color-white);
-    background-color: var(--color-primary);
-    text-align: center;
-    padding: 10px 0;
+    font-size: 1.3rem;
+}
+
+.btn-add-vehicle {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Prompt";
+    transition: all 0.2s;
+}
+
+.btn-add-vehicle:hover {
+    background-color: #e0a800;
+    transform: scale(1.03);
 }
 
 .vehicleUser .headVlist {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
-    margin: 0.625rem 1rem 0;
+    margin: 0.5rem 1rem 0;
     background-color: var(--color-primary);
     border-radius: 6px;
 }
 
 .vehicleUser .headVlist .Vlist {
     color: var(--color-white);
-    padding: 10px;
+    padding: 12px;
     margin: 0;
     text-align: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
-.vehicleUser .headVlist a, .qr-btn {
+.vehicleUser .headVlist a {
     display: flex;
     justify-content: center;
     align-items: center;
     text-decoration: none;
     color: var(--color-primary);
     background-color: var(--color-white);
-    border-radius: 14px;
-    padding: 10px;
-    margin: 10px;
+    border-radius: 20px;
+    padding: 8px 16px;
+    margin: 8px auto;
     font-weight: 600;
-    cursor: pointer;
-    border: none;
-    font-family: "Prompt";
+    transition: all 0.2s;
+    width: fit-content;
 }
 
+/* ปุ่ม QR Code */
 .qr-section {
-    margin: 1rem;
+    margin: 1.2rem 1rem;
     text-align: center;
 }
 
 .qr-btn-generate {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #28a745, #1e7e34);
     color: white;
     font-size: 16px;
-    padding: 12px 25px;
-    border-radius: 20px;
+    font-weight: 600;
+    padding: 14px 28px;
+    border-radius: 30px;
     border: none;
     cursor: pointer;
     font-family: "Prompt";
-    transition: 0.2s;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    transition: all 0.25s ease;
 }
 
 .qr-btn-generate:hover {
-    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
 }
 
-/* Vehicle Card */
+/* Vehicle Detail */
 #page-vehicleDetail {
     background-color: var(--color-bg); 
     padding: 30px 20px;
@@ -197,7 +250,7 @@ nav ul .user-select {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .v-title, .v-date, .v-item {
@@ -205,14 +258,14 @@ nav ul .user-select {
     color: var(--color-white);
     text-align: center;
     padding: 15px;
-    font-size: 1.2rem;
-    border-radius: 6px;
+    font-size: 1.1rem;
+    border-radius: 8px;
 }
 
 .v-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px 15px;
+    gap: 10px 15px;
 }
 
 .v-item.v-time {
@@ -228,27 +281,24 @@ nav ul .user-select {
 }
 
 .time-record {
-    width: 80%;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    width: 85%;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-.time-record:last-child {
-    border-bottom: none;
-}
-
-/* Dashboard */
+/* Dashboard Cards */
 .dashboard {
     padding: 20px;
 }
 
 .dashboard-banner {
-    background: var(--color-secondary);
+    background: linear-gradient(135deg, #29356c, #002e5e);
     color: white;
     text-align: center;
-    padding: 20px;
+    padding: 24px;
     margin-bottom: 20px;
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--color-shadow);
 }
 
 .summary-grid {
@@ -261,27 +311,31 @@ nav ul .user-select {
 .summary-box {
     background: var(--color-primary);
     color: white;
-    padding: 30px 20px;
+    padding: 25px 20px;
     text-align: center;
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px var(--color-shadow);
 }
 
 .summary-box h1 {
-    margin-top: 15px;
-    font-size: 42px;
+    margin-top: 12px;
+    font-size: 40px;
+    font-weight: 700;
 }
 
 .back-btn {
     background: white;
     color: var(--color-primary);
     border: none;
-    border-radius: 10px;
-    padding: 10px 20px;
+    border-radius: 20px;
+    padding: 10px 22px;
     margin: 15px;
-    font-size: 16px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     font-family: "Prompt";
-    transition: .3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: all 0.2s;
 }
 
 .back-btn:hover {
@@ -289,11 +343,12 @@ nav ul .user-select {
     color: white;
 }
 
+/* Progress Bar */
 .expire-progress-box {
     background-color: var(--color-primary);
     margin: 1rem 1rem 0;
-    padding: 15px 20px;
-    border-radius: 6px;
+    padding: 16px 20px;
+    border-radius: 8px;
 }
 
 .expire-info {
@@ -301,7 +356,7 @@ nav ul .user-select {
     justify-content: space-between;
     color: var(--color-white);
     font-size: 1rem;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .progress-track {
@@ -316,16 +371,37 @@ nav ul .user-select {
     height: 100%;
     width: 0%;
     border-radius: 7px;
-    transition: width 0.4s ease-in-out, background-color 0.4s ease-in-out;
+    transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
 }
 
+/* Dropdown วัน/เดือน/ปี */
+.date-select-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.date-select {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    font-family: "Prompt";
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Auth Modal & QR Modal UI */
 .login-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 46, 94, 0.95);
+    background-color: rgba(0, 46, 94, 0.92);
+    backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -334,12 +410,12 @@ nav ul .user-select {
 
 .login-box {
     background-color: var(--color-bg);
-    padding: 30px;
-    border-radius: 12px;
+    padding: 32px;
+    border-radius: 16px;
     text-align: center;
     width: 90%;
-    max-width: 400px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    max-width: 410px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
 }
 
 .login-logo {
@@ -354,7 +430,7 @@ nav ul .user-select {
 .auth-tabs {
     display: flex;
     margin-bottom: 20px;
-    border-bottom: 2px solid var(--color-secondary);
+    border-bottom: 2px solid #ddd;
 }
 
 .auth-tab {
@@ -385,11 +461,13 @@ nav ul .user-select {
 }
 
 .auth-form input {
-    padding: 12px;
+    padding: 12px 15px;
     border-radius: 8px;
     border: 1px solid var(--color-border);
     font-family: "Prompt";
     font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
 }
 
 .submit-btn {
@@ -400,10 +478,61 @@ nav ul .user-select {
     border-radius: 8px;
     font-family: "Prompt";
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
 }
 
 .submit-btn:hover {
     background-color: var(--color-secondary);
+}
+
+.qr-modal-box {
+    max-width: 380px;
+}
+
+.qr-title {
+    color: var(--color-primary);
+    font-size: 1.25rem;
+    margin-bottom: 6px;
+}
+
+.qr-subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.visitor-code-badge {
+    background-color: #eef4fb;
+    color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px dashed var(--color-primary);
+}
+
+.visitor-code-badge span {
+    font-family: monospace;
+    font-size: 16px;
+    color: #d9534f;
+    letter-spacing: 1px;
+}
+
+.qr-img-wrap {
+    margin: 10px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.qr-data-text {
+    font-size: 11px;
+    color: #666;
+    word-break: break-all;
+    margin-bottom: 16px;
+    background: #f4f4f4;
+    padding: 8px;
+    border-radius: 6px;
 }
