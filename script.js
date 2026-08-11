@@ -80,13 +80,14 @@ document.addEventListener("DOMContentLoaded", () => {
             regMonthSelect.appendChild(opt);
         });
 
-        // เจนตัวเลือกปี (ย้อนหลัง 2 ปี ถึง อนาคต 5 ปี)
+        // 3. สร้างตัวเลือก ปี เริ่มที่ ค.ศ. 1957 (พ.ศ. 2500) จนถึงปีปัจจุบัน (currentYear)
         regYearSelect.innerHTML = "";
-        for (let y = currentYear - 2; y <= currentYear + 5; y++) {
+        for (let y = 1957; y <= currentYear; y++) { // เริ่มที่ พ.ศ.2500 ถึงปีปัจจุบัน
             const opt = document.createElement('option');
             opt.value = y;
             opt.textContent = `พ.ศ. ${y + 543} (${y})`;
-            if (y === currentYear) opt.selected = true;
+            // เซตให้เลือกปีปัจจุบัน (currentYear) เป็นค่าเริ่มต้น
+            if (y === currentYear) opt.selected = true; 
             regYearSelect.appendChild(opt);
         }
     }
