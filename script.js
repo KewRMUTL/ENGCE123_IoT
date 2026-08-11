@@ -1,14 +1,22 @@
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // ==========================================================
+    // 1. ตั้งค่า URL ของ API บน Cloud Server และไฟล์ข้อมูล Local
+    // ==========================================================
     const BASE_API_URL = "https://api-node-iot.onrender.com";
-    const CREATE_USER_API = `${BASE_API_URL}/api/users/createUser`;
-    const LOCAL_JSON_URL = "./dataTest.json";
+    const AUTH_LOGIN_API = `${BASE_API_URL}/api/auth/login`;              // API เข้าสู่ระบบ
+    const CREATE_USER_API = `${BASE_API_URL}/api/users/createUser`;        // API สร้างลูกบ้านใหม่
+    const CREATE_VEHICLE_API = `${BASE_API_URL}/api/vehicles/createVehicle`;// API เพิ่มรถยนต์
+    const DELETE_VEHICLE_API = `${BASE_API_URL}/api/vehicles/deleteVehicle`;// API ลบรถยนต์
+    const LOCAL_JSON_URL = "./dataTest.json";                             // ไฟล์ JSON สำรอง
 
-    let mainData = [];
-    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+    let mainData = []; // ตัวแปรเก็บรายการลูกบ้านทั้งหมด
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null; // ดึงข้อมูลผู้ใช้ที่ล็อกอินค้างไว้
 
-    // Elements
+    // ==========================================================
+    // 2. ดึง Element ต่างๆ จากหน้าเว็บ (index.html) มาเตรียมใช้งาน
+    // ==========================================================
     const authModal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
@@ -18,10 +26,84 @@ document.addEventListener("DOMContentLoaded", () => {
     const navItems = document.querySelectorAll('nav li[data-target]');
     const pages = document.querySelectorAll('.page');
     
+    // Elements สำหรับป๊อปอัพ QR Code
     const qrModal = document.getElementById('qrModal');
     const btnCloseQr = document.getElementById('btnCloseQr');
     const qrImageContainer = document.getElementById('qrImageContainer');
     const qrDataText = document.getElementById('qrDataText');
+    const visitorCodeDisplay = document.getElementById('visitorCodeDisplay');
+
+    // Elements สำหรับป๊อปอัพเพิ่มรถยนต์
+    const addVehicleModal = document.getElementById('addVehicleModal');
+    const addVehicleForm = document.getElementById('addVehicleForm');
+    const btnCancelAddVehicle = document.getElementById('btnCancelAddVehicle');
+
+    // Elements สำหรับ Dropdown เลือก วัน/เดือน/ปี
+    const regDaySelect = document.getElementById('regDay');
+    const regMonthSelect = document.getElementById('regMonth');
+    const regYearSelect = document.getElementById('regYear');
+
+    // ==========================================================
+    // 3. ฟังก์ชันสร้างรายการเลือก วัน/เดือน/ปี แบบลื่นไหล (Dropdown)
+    // ==========================================================
+    function initDateSelects() {
+        if (!regDaySelect || !regMonthSelect || !regYearSelect) return;
+
+        const monthsTH = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+
+        const today = new Date();
+        const currentDay = today.getDate();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+
+        // เจนตัวเลือกวันที่ 1-31
+        regDaySelect.innerHTML = "";
+        for (let d = 1; d <= 31; d++) {
+            const opt = document.createElement('option');
+            opt.value = d < 10 ? `0${d}` : `${d}`;
+            opt.textContent = `วันที่ ${d}`;
+            if (d === currentDay) opt.selected = true;
+            regDaySelect.appendChild(opt);
+        }
+
+        // เจนตัวเลือกเดือน ม.ค.-ธ.ค.
+        regMonthSelect.innerHTML = "";
+        monthsTH.forEach((mName, idx) => {
+            const opt = document.createElement('option');
+            const mVal = (idx + 1) < 10 ? `0${idx + 1}` : `${idx + 1}`;
+            opt.value = mVal;
+            opt.textContent = mName;
+            if (idx === currentMonth) opt.selected = true;
+            regMonthSelect.appendChild(opt);
+        });
+
+        // เจนตัวเลือกปี (ย้อนหลัง 2 ปี ถึง อนาคต 5 ปี)
+        regYearSelect.innerHTML = "";
+        for (let y = currentYear - 2; y <= currentYear + 5; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = `พ.ศ. ${y + 543} (${y})`;
+            if (y === currentYear) opt.selected = true;
+            regYearSelect.appendChild(opt);
+        }
+    }
+
+    initDateSelects();
+
+    // ==========================================================
+    // 4. ฟังก์ชันสุ่มตัวอักษร+ตัวเลข 10 หลัก สำหรับ QR Code สำหรับแขก
+    // ==========================================================
+    function generateRandomVisitorCode(length = 10) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
 
     function updateAuthUI() {
         if (currentUser) {
@@ -49,51 +131,88 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 1. ระบบเข้าสู่ระบบ (Strict Checking: ตรวจสอบทั้ง Username/เลขบ้าน และ Password ให้ตรงเป๊ะ)
+    // ==========================================================
+    // 5. ระบบเข้าสู่ระบบ (Login)
+    // ==========================================================
     if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const inputUser = document.getElementById('loginUsername').value.trim();
             const inputPass = document.getElementById('loginPassword').value.trim();
 
-            const user = mainData.find(u => 
+            try {
+                const res = await fetch(AUTH_LOGIN_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: inputUser, password: inputPass })
+                });
+
+                const isLoginSuccess = await res.json();
+
+                if (isLoginSuccess === true || isLoginSuccess.status === true) {
+                    let user = mainData.find(u => u.username === inputUser || u.houseNumber === inputUser);
+                    if (!user) {
+                        user = { id: Date.now(), houseNumber: inputUser, username: inputUser, ownerName: "ลูกบ้าน", vehicles: [] };
+                    }
+                    currentUser = user;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    updateAuthUI();
+                    renderPage('home');
+                    return;
+                }
+            } catch (err) {
+                console.warn("Cloud Login Error, falling back to Local JSON check:", err);
+            }
+
+            const localUser = mainData.find(u => 
                 (u.houseNumber === inputUser || u.username === inputUser) && 
                 u.password === inputPass
             );
 
-            if (user) {
-                currentUser = user;
-                localStorage.setItem('currentUser', JSON.stringify(user));
+            if (localUser) {
+                currentUser = localUser;
+                localStorage.setItem('currentUser', JSON.stringify(localUser));
                 updateAuthUI();
                 renderPage('home');
             } else {
-                alert('เลขที่บ้าน/ชื่อผู้ใช้งาน หรือ รหัสผ่านไม่ถูกต้อง!\n(ตัวอย่างทดสอบ: บ้านเลขที่ 158/1 | รหัสผ่าน pass123)');
+                alert('ชื่อผู้ใช้งาน หรือ รหัสผ่านไม่ถูกต้อง!\n(ตัวอย่างทดสอบ: supanat01 | รหัสผ่าน 123456)');
             }
         });
     }
 
-    // 2. ระบบลงทะเบียน (ส่งข้อมูลไปยัง DB ครบทุกฟิลด์ตามตาราง Users)
+    // ==========================================================
+    // 6. ระบบลงทะเบียนลูกบ้านใหม่ (Register)
+    // ==========================================================
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const houseNo = document.getElementById('regHouseNo').value.trim();
             const name = document.getElementById('regName').value.trim();
-            const startDate = document.getElementById('regMemberStart').value;
-            const expireDate = document.getElementById('regMemberExpire').value;
+            const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value.trim();
 
+            const d = regDaySelect.value;
+            const m = regMonthSelect.value;
+            const y = regYearSelect.value;
+            const startDateVal = `${y}-${m}-${d}`;
+
             const todayStr = new Date().toISOString().split('T')[0];
+
+            const startObj = new Date(startDateVal);
+            const expireObj = new Date(startObj);
+            expireObj.setFullYear(expireObj.getFullYear() + 1);
+            const expireDateStr = expireObj.toISOString().split('T')[0];
 
             const payload = {
                 houseNumber: houseNo,
                 ownerName: name,
+                username: username,
+                password: password,
+                role: "member",
                 registerDate: todayStr,
-                memberStartDate: startDate,
-                memberExpireDate: expireDate,
-                password: password
+                memberStartDate: startDateVal,
+                memberExpireDate: expireDateStr
             };
-
-            console.log("ส่งข้อมูลลงทะเบียนไปยัง API:", payload);
 
             try {
                 const response = await fetch(CREATE_USER_API, {
@@ -103,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 if (response.ok) {
-                    console.log("บันทึกลง Database สำเร็จ");
+                    console.log("บันทึกลง Database บน Cloud สำเร็จ");
                 }
             } catch (err) {
                 console.error("API Error:", err);
@@ -111,7 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const newUser = {
                 id: mainData.length + 1,
-                username: houseNo,
                 ...payload,
                 vehicles: []
             };
@@ -119,10 +237,134 @@ document.addEventListener("DOMContentLoaded", () => {
             mainData.push(newUser);
             currentUser = newUser;
             localStorage.setItem('currentUser', JSON.stringify(newUser));
-            alert(`ลงทะเบียนสำเร็จสำหรับบ้านเลขที่ ${houseNo}! ข้อมูลถูกบันทึกเรียบร้อยแล้ว`);
+            alert(`ลงทะเบียนสำเร็จสำหรับบ้านเลขที่ ${houseNo}!\nวันเริ่มสมาชิก: ${formatDateDisplay(startDateVal)}\nวันหมดอายุสมาชิกอัตโนมัติ: ${formatDateDisplay(expireDateStr)}`);
             updateAuthUI();
             renderPage('home');
         });
+    }
+
+    // ==========================================================
+    // 7. ระบบลงทะเบียนรถยนต์เพิ่ม (ซิงค์ข้อมูลเข้า mainData เพื่อให้อัปเดตสถิติหน้า Home)
+    // ==========================================================
+    if (addVehicleForm) {
+        addVehicleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const plateInputRaw = document.getElementById('inputPlate').value.trim();
+            const provinceInputRaw = document.getElementById('inputProvince').value.trim();
+            if (!plateInputRaw || !provinceInputRaw) return;
+
+            // ตัดช่องว่างป้ายทะเบียนและจังหวัด
+            const cleanedPlate = plateInputRaw.replace(/\s+/g, '');
+            const cleanedProvince = provinceInputRaw.replace(/\s+/g, '');
+
+            const targetUser = currentUser || mainData[0];
+            const todayDisplay = new Date().toLocaleDateString('en-GB');
+
+            const payload = {
+                user_id: targetUser.id || 1,
+                plate: cleanedPlate,
+                province: cleanedProvince,
+                type: "Car",
+                registerDate: todayDisplay
+            };
+
+            let vehicleId = Date.now();
+
+            try {
+                const response = await fetch(CREATE_VEHICLE_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    console.log("ลงทะเบียนรถยนต์ลง Cloud Database เรียบร้อย");
+                    const resData = await response.json();
+                    if (resData && resData.id) vehicleId = resData.id;
+                }
+            } catch (err) {
+                console.error("Create Vehicle API Error:", err);
+            }
+
+            const newVehicleObj = {
+                id: vehicleId,
+                user_id: targetUser.id,
+                plate: cleanedPlate,
+                province: cleanedProvince,
+                type: "Car",
+                registerDate: new Date().toISOString().split('T')[0],
+                logs: []
+            };
+
+            if (!targetUser.vehicles) targetUser.vehicles = [];
+            targetUser.vehicles.push(newVehicleObj);
+
+            // 🟢 อัปเดตใน mainData ด้วยเพื่อให้หน้า Home คำนวณยอดรวมถูกต้อง
+            const mainUserIndex = mainData.findIndex(u => u.id === targetUser.id || u.houseNumber === targetUser.houseNumber);
+            if (mainUserIndex !== -1) {
+                mainData[mainUserIndex] = targetUser;
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(targetUser));
+
+            let displayPlate = cleanedPlate;
+            if (cleanedPlate.length > 3) {
+                displayPlate = cleanedPlate.substring(0, cleanedPlate.length - 4) + ' ' + cleanedPlate.substring(cleanedPlate.length - 4);
+            }
+
+            alert(`ลงทะเบียนรถยนต์ป้ายทะเบียน "${displayPlate}" (${cleanedProvince}) เรียบร้อยแล้ว!`);
+            addVehicleModal.style.display = 'none';
+            document.getElementById('inputPlate').value = '';
+            document.getElementById('inputProvince').value = '';
+            renderDirectUserDetail();
+        });
+    }
+
+    if (btnCancelAddVehicle) {
+        btnCancelAddVehicle.addEventListener('click', () => {
+            addVehicleModal.style.display = 'none';
+        });
+    }
+
+    // ==========================================================
+    // 8. ฟังก์ชันสั่งลบรถยนต์ (ยิง API DELETE /api/vehicles/deleteVehicle/:id)
+    // ==========================================================
+    async function deleteVehicle(vehicleId, carIndex) {
+        const targetUser = currentUser || mainData[0];
+        if (!targetUser || !targetUser.vehicles) return;
+
+        const vehicleToDelete = targetUser.vehicles[carIndex];
+        const plateName = vehicleToDelete ? vehicleToDelete.plate : "";
+
+        if (!confirm(`คุณต้องการลบรถยนต์ป้ายทะเบียน "${plateName}" ออกใช่หรือไม่?`)) {
+            return;
+        }
+
+        try {
+            // ยิง DELETE ไปยัง API ของเพื่อนตามสเปค DELETE/api/vehicles/deleteVehicle/1
+            const response = await fetch(`${DELETE_VEHICLE_API}/${vehicleId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                console.log("ลบรถยนต์จาก Cloud Database สำเร็จ");
+            }
+        } catch (err) {
+            console.error("Delete Vehicle API Error:", err);
+        }
+
+        // ลบออกจากอาร์เรย์ฝั่ง Local
+        targetUser.vehicles.splice(carIndex, 1);
+
+        // อัปเดตใน mainData
+        const mainUserIndex = mainData.findIndex(u => u.id === targetUser.id || u.houseNumber === targetUser.houseNumber);
+        if (mainUserIndex !== -1) {
+            mainData[mainUserIndex] = targetUser;
+        }
+
+        localStorage.setItem('currentUser', JSON.stringify(targetUser));
+        alert("ลบรายการรถยนต์เรียบร้อยแล้ว!");
+        renderDirectUserDetail();
     }
 
     if (logoutBtn) {
@@ -139,6 +381,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // ==========================================================
+    // 9. ฟังก์ชันสลับการแสดงผลหน้าเว็บ (SPA)
+    // ==========================================================
     function renderPage(target, params = null) {
         pages.forEach(page => page.classList.remove('active'));
         navItems.forEach(li => li.classList.remove('user-select'));
@@ -212,7 +457,9 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>`;
     }
 
-    // 5. Render หน้า USER DATA และสร้าง QR Code IoT ที่สอดคล้องกับฝั่งหลังบ้าน
+    // ==========================================================
+    // 10. ฟังก์ชันวาดการ์ดแสดงรายละเอียดลูกบ้าน (หน้า USER DATA) + ปุ่มลบ
+    // ==========================================================
     function renderDirectUserDetail() {
         const container = document.getElementById('userDirectDetail');
         const user = currentUser || mainData[0];
@@ -227,9 +474,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     carCount++;
                     vehiclesHTML += `
                     <div class="headVlist">
-                        <p class="Vlist">${v.plate}</p>
-                        <p class="Vlist">รถยนต์</p> <!-- ปรับตามข้อ 5 -->
-                        <a href="#" data-target="vehicleDetail" data-car-index="${index}" data-id="${user.id}">ดูประวัติเข้า-ออก</a>
+                        <p class="Vlist">${v.plate} ${v.province ? `(${v.province})` : ''}</p>
+                        <p class="Vlist">รถยนต์</p>
+                        <div style="display: flex; justify-content: center; gap: 8px; align-items: center;">
+                            <a href="#" data-target="vehicleDetail" data-car-index="${index}" data-id="${user.id}">ดูประวัติ</a>
+                            <button type="button" class="btn-delete-v" data-v-id="${v.id}" data-car-index="${index}" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-family: Prompt; font-size: 13px;">🗑️ ลบ</button>
+                        </div>
                     </div>`;
                 }
             });
@@ -265,22 +515,39 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <section class="vehicleUser">
-                <h1 class="vehicleList">รายละเอียดยานพาหนะที่ผูกไว้</h1>
+                <div class="vehicle-header-flex">
+                    <h1 class="vehicleList">รายละเอียดยานพาหนะที่ผูกไว้</h1>
+                    <button type="button" class="btn-add-vehicle" id="btnOpenAddVehicleModal">＋ ลงทะเบียนรถเพิ่ม</button>
+                </div>
                 <div class="headVlist">
                     <h3 class="Vlist">ป้ายทะเบียน</h3>
                     <h3 class="Vlist">ประเภท</h3>
-                    <h3 class="Vlist"></h3>
+                    <h3 class="Vlist">การจัดการ</h3>
                 </div>
                 ${vehiclesHTML}
             </section>`;
 
-        // สร้าง QR Code โครงสร้าง JSON สำหรับเชื่อมต่อกล้อง/สแกนเนอร์หลังบ้าน
+        // ดักจับกดปุ่มลบ
+        container.querySelectorAll('.btn-delete-v').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const vId = e.target.dataset.vId;
+                const cIdx = Number(e.target.dataset.carIndex);
+                deleteVehicle(vId, cIdx);
+            });
+        });
+
+        document.getElementById('btnOpenAddVehicleModal')?.addEventListener('click', () => {
+            addVehicleModal.style.display = 'flex';
+        });
+
         document.getElementById('btnGenerateVisitorQR')?.addEventListener('click', () => {
+            const randomStreamCode = generateRandomVisitorCode(10);
+
             const qrPayload = {
                 type: "VISITOR_PASS",
                 user_id: user.id,
                 houseNumber: user.houseNumber,
-                ownerName: user.ownerName,
+                visitorCode: randomStreamCode,
                 generateTime: new Date().toISOString(),
                 status: "ACTIVE"
             };
@@ -288,6 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const jsonString = JSON.stringify(qrPayload);
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(jsonString)}`;
             
+            visitorCodeDisplay.textContent = randomStreamCode;
             qrImageContainer.innerHTML = `<img src="${qrUrl}" alt="Visitor QR Pass" style="width: 200px; height: 200px; border-radius: 8px; border: 2px solid var(--color-primary);">`;
             qrDataText.textContent = `Payload: ${jsonString}`;
             qrModal.style.display = 'flex';
@@ -319,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="v-title">ประวัติการเข้า-ออก</div>
             <div class="v-date">วันที่ลงทะเบียนรถ : ${formatDateDisplay(data.registerDate)} </div>
             <div class="v-grid">
-                <div class="v-item">ป้ายทะเบียน : ${data.plate}</div>
+                <div class="v-item">ป้ายทะเบียน : ${data.plate} ${data.province ? `(${data.province})` : ''}</div>
                 <div class="v-item">ประเภท : รถยนต์</div>
                 <div class="v-item">เวลาเข้า</div>
                 <div class="v-item">เวลาออก</div>
@@ -331,6 +599,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('btnBackToDetail')?.addEventListener('click', () => renderPage('user'));
     }
 
+    // ==========================================================
+    // 11. คำนวณ Dashboard หน้า Home
+    // ==========================================================
     function renderDashboard(dataList) {
         let vehicleTotal = 0, carIn = 0, carOut = 0, insideVillageCount = 0;
 
@@ -380,6 +651,15 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(data => {
             mainData = data;
+            
+            // ถ้ามี currentUser ล็อกอินอยู่ ให้ซิงค์รายการรถใน currentUser เข้า mainData
+            if (currentUser) {
+                const idx = mainData.findIndex(u => u.id === currentUser.id || u.houseNumber === currentUser.houseNumber);
+                if (idx !== -1) {
+                    mainData[idx] = currentUser;
+                }
+            }
+
             updateAuthUI();
             renderPage('home');
         })
