@@ -648,21 +648,45 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPage(target, params);
     });
 
-    fetch(LOCAL_JSON_URL)
-        .then(res => res.json())
-        .then(data => {
-            mainData = data;
-            
-            // ถ้ามี currentUser ล็อกอินอยู่ ให้ซิงค์รายการรถใน currentUser เข้า mainData
-            if (currentUser) {
-                const idx = mainData.findIndex(u => u.id === currentUser.id || u.houseNumber === currentUser.houseNumber);
-                if (idx !== -1) {
-                    mainData[idx] = currentUser;
+    // ==========================================================
+    // โหลดข้อมูลเริ่มต้น: ดึงจาก Cloud API ของฝั่งแอดมิน
+    // ==========================================================
+    async function initApp() {
+        try {
+            // ดึงข้อมูลลูกบ้านทั้งหมดจาก Cloud Database
+            const res = await fetch(`${BASE_API_URL}/api/users/getUsers`);
+            if (res.ok) {
+                const cloudUsers = await res.json();
+                if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+                    mainData = cloudUsers;
+                } else {
+                    throw new Error("Cloud returned empty array");
                 }
+            } else {
+                throw new Error("Cloud response not OK");
             }
+        } catch (err) {
+            console.warn("ไม่สามารถดึงข้อมูลจาก Cloud ได้ กำลังโหลด dataTest.json สำรองแทน:", err);
+            try {
+                const localRes = await fetch(LOCAL_JSON_URL);
+                mainData = await localRes.json();
+            } catch (localErr) {
+                console.error("Local JSON Error:", localErr);
+            }
+        }
 
-            updateAuthUI();
-            renderPage('home');
-        })
-        .catch(err => console.error("Error fetching data:", err));
+        // ซิงค์ข้อมูลผู้ใช้ปัจจุบัน
+        if (currentUser) {
+            const idx = mainData.findIndex(u => u.id === currentUser.id || u.houseNumber === currentUser.houseNumber);
+            if (idx !== -1) {
+                currentUser = mainData[idx];
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+        }
+
+        updateAuthUI();
+        renderPage('home');
+    }
+
+    initApp();
 });
