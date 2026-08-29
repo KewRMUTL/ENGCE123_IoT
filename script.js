@@ -739,3 +739,49 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAuthUI();
     renderPage('home');
 });
+
+/* ==========================================================================
+   ส่วนเสริม: จัดการข้อมูลจาก Database (ตัดช่องว่างป้ายทะเบียน + แปลงวันเวลา/ดัก null)
+   ========================================================================== */
+
+// 1. ฟังก์ชันตัดช่องว่างป้ายทะเบียน (Data Sanitization)
+// ช่วยให้ "กข 1234" และ "กข1234" สามารถจับคู่ข้อมูลกันได้ถูกต้อง
+function sanitizePlate(plateNumber) {
+    if (!plateNumber) return '';
+    return plateNumber.toString().replace(/\s+/g, '');
+}
+
+// 2. ฟังก์ชันแปลงรูปแบบวัน-เวลาไทย และป้องกันการแสดงผลค่า null
+function formatLogDateTime(dateString) {
+    if (!dateString || dateString === 'null') {
+        return 'ยังอยู่ภายในโครงการ';
+    }
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+        return dateString; // กรณีเป็นข้อความปกติที่ไม่ได้มาในรูปแบบ ISO Date
+    }
+    return date.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// 3. ฟังก์ชันกรองและจัดรูปแบบประวัติการเข้า-ออกสำหรับรถของลูกบ้าน
+function getMatchedVehicleLogs(apiResponseData, targetPlate) {
+    if (!Array.isArray(apiResponseData)) return [];
+    
+    const cleanTarget = sanitizePlate(targetPlate);
+    
+    return apiResponseData
+        .filter(log => sanitizePlate(log.plate) === cleanTarget)
+        .map(log => ({
+            ...log,
+            formattedTimeIn: formatLogDateTime(log.time_in),
+            formattedTimeOut: formatLogDateTime(log.time_out),
+            cameraInText: log.camera_in ? `(${log.camera_in})` : '',
+            cameraOutText: log.camera_out ? `(${log.camera_out})` : ''
+        }));
+}
