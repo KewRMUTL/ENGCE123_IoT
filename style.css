@@ -1,4 +1,4 @@
-.@import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap');
 
 :root {
     --color-primary: #002e5e;      
@@ -67,6 +67,7 @@ header {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    font-family: "Prompt", sans-serif;
     transition: all 0.2s ease;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
@@ -173,7 +174,7 @@ nav ul .user-select {
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    font-family: "Prompt";
+    font-family: "Prompt", sans-serif;
     transition: all 0.2s;
 }
 
@@ -229,7 +230,7 @@ nav ul .user-select {
     border-radius: 30px;
     border: none;
     cursor: pointer;
-    font-family: "Prompt";
+    font-family: "Prompt", sans-serif;
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
     transition: all 0.25s ease;
 }
@@ -333,7 +334,7 @@ nav ul .user-select {
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    font-family: "Prompt";
+    font-family: "Prompt", sans-serif;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     transition: all 0.2s;
 }
@@ -386,7 +387,7 @@ nav ul .user-select {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid var(--color-border);
-    font-family: "Prompt";
+    font-family: "Prompt", sans-serif;
     font-size: 14px;
     background-color: white;
     cursor: pointer;
@@ -439,7 +440,7 @@ nav ul .user-select {
     border: none;
     background: none;
     font-size: 16px;
-    font-family: "Prompt";
+    font-family: "Prompt", sans-serif;
     cursor: pointer;
     color: var(--color-secondary);
 }
@@ -464,7 +465,7 @@ nav ul .user-select {
     padding: 12px 15px;
     border-radius: 8px;
     border: 1px solid var(--color-border);
-    font-family: "Prompt";
+    font-family: "Prompt", sans-serif;
     font-size: 14px;
     outline: none;
     transition: border 0.2s;
@@ -476,7 +477,7 @@ nav ul .user-select {
     color: white;
     border: none;
     border-radius: 8px;
-    font-family: "Prompt";
+    font-family: "Prompt", sans-serif;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -535,10 +536,4 @@ nav ul .user-select {
     background: #f4f4f4;
     padding: 8px;
     border-radius: 6px;
-}
-
-
-/* ฟ้อนต์ออกจากระบบ */
-#logoutBtn, .btn-logout {
-    font-family: inherit !important;
 }
