@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap');
+.@import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap');
 
 :root {
     --color-primary: #002e5e;      
@@ -538,27 +538,7 @@ nav ul .user-select {
 }
 
 
-/* คืนค่าฟอนต์ปุ่มและอินพุตให้เป็น Prompt */
-button, input, select {
-    font-family: 'Prompt', sans-serif !important;
-}
-
-#logoutBtn, .logout-btn {
-    font-family: 'Prompt', sans-serif !important;
-}
-
-/* ปิดไฮไลต์สีเทาตอนแตะบน */
-nav ul li, nav ul li a, .btn-logout {
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* แก้ปัญหาสีค้างโดยยึดสีดั้งเดิม: 
-   - เมื่อเลือก (user-select): พื้นขาว กรอบขาว ตัวหนังสือน้ำเงิน
-   - เมื่อไม่เลือก: พื้นน้ำเงิน กรอบขาว ตัวหนังสือขาว */
-nav ul li.user-select a {
-    color: #1a2a4b !important;
-}
-
-nav ul li:not(.user-select) a {
-    color: #ffffff !important;
+/* ฟ้อนต์ออกจากระบบ */
+#logoutBtn, .btn-logout {
+    font-family: inherit !important;
 }
