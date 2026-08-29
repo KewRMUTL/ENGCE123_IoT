@@ -536,3 +536,52 @@ nav ul .user-select {
     padding: 8px;
     border-radius: 6px;
 }
+
+/* บังคับให้ปุ่มทุกปุ่มใช้ฟอนต์ Prompt เหมือนกันทั้งหน้าเว็บ */
+button, input, select {
+    font-family: 'Prompt', sans-serif !important;
+}
+
+/* จัดการสไตล์ปุ่มออกจากระบบให้สวยและฟอนต์ตรงกัน */
+#logoutBtn, .logout-btn {
+    font-family: 'Prompt', sans-serif !important;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* แก้ไขปุ่มเมนูแถบด้านซ้าย (HOME / USER DATA) */
+nav ul li {
+    background-color: transparent;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    -webkit-tap-highlight-color: transparent; /* ปิดแถบไฮไลต์สีเทาตอนแตะบน iPad */
+}
+
+/* เมื่อเมนูนั้นถูกเลือก (Active / Selected) ให้เป็นพื้นขาว ตัวหนังสือสีน้ำเงินชัดเจน */
+nav ul li.user-select,
+nav ul li.active {
+    background-color: #ffffff !important;
+}
+
+nav ul li.user-select a,
+nav ul li.active a {
+    color: #1a2a4b !important; /* สีน้ำเงินเข้มตามธีม */
+    font-weight: 700;
+}
+
+/* เมื่อยังไม่ถูกเลือก ให้เป็นพื้นใส ตัวหนังสือขาว */
+nav ul li:not(.user-select) a,
+nav ul li:not(.active) a {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+/* ลบผลข้างเคียงของ hover บนจอสัมผัส เพื่อไม่ให้สีค้าง */
+@media (hover: none) {
+    nav ul li:hover {
+        background-color: transparent;
+    }
+    nav ul li.user-select:hover,
+    nav ul li.active:hover {
+        background-color: #ffffff !important;
+    }
+}
