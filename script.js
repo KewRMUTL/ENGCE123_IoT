@@ -171,17 +171,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const vehData = await vehRes.json();
             const logsData = await logsRes.json();
 
-            // บันทึกเข้า Global State
+            // รองรับทั้งแบบ Array ตรงๆ และแบบห่อด้วย { success: true, data: [...] }
             allUsersData = Array.isArray(usersData) ? usersData : (usersData.data || []);
             allVehiclesData = Array.isArray(vehData) ? vehData : (vehData.data || []);
             allLogsData = Array.isArray(logsData) ? logsData : (logsData.data || []);
 
-            // ซิงค์ข้อมูลล่าสุดของผู้ใช้ที่กำลังเปิด Session อยู่
             if (currentUser) {
                 const refreshedUser = allUsersData.find(u => 
                     u.id === currentUser.id || 
                     u.houseNumber === currentUser.houseNumber || 
-                    u.username === currentUser.username
+                    (u.username && u.username === currentUser.username)
                 );
                 if (refreshedUser) {
                     currentUser = refreshedUser;
