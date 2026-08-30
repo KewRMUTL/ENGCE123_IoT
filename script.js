@@ -2,72 +2,26 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================
-    // ส่วนที่ 1: การตั้งค่า URL เชื่อมต่อ API Cloud Server ของแอดมิน
+    // ส่วนที่ 1: กำหนด URL เชื่อมต่อ Cloud RESTful API Backend
+    // (ใช้ Base URL จริง และชี้ไปยัง Endpoint ฝั่งฐานข้อมูลโดยตรง)
     // ==========================================================
-    const BASE_API_URL = "https://api-node-iot.onrender.com";
-    const AUTH_LOGIN_API = `${BASE_API_URL}/api/auth/login`;               // ยิงตรวจสอบ Login
-    const CREATE_USER_API = `${BASE_API_URL}/api/users/createUser`;        // ยิงสร้างลูกบ้านใหม่
-    const UPDATE_USER_API = `${BASE_API_URL}/api/users/updateUser`;        // ยิงอัปเดตข้อมูล/ต่ออายุสมาชิก
-    const CREATE_VEHICLE_API = `${BASE_API_URL}/api/vehicles/createVehicle`;// ยิงเพิ่มรถยนต์
-    const DELETE_VEHICLE_API = `${BASE_API_URL}/api/vehicles/deleteVehicle`;// ยิงลบรถยนต์
+    const BASE_API_URL = "https://api-node-iot.onrender.com/api";
+    const GET_USERS_API = `${BASE_API_URL}/users/getUsers`;                 // ดึงข้อมูลลูกบ้านทั้งหมด (GET)
+    const CREATE_USER_API = `${BASE_API_URL}/users/createUser`;             // สร้างสมาชิกลูกบ้านใหม่ (POST)
+    const UPDATE_USER_API = `${BASE_API_URL}/users/updateUser`;             // อัปเดตข้อมูล/ต่ออายุสมาชิก (PUT)
+    const GET_VEHICLES_API = `${BASE_API_URL}/vehicles/getVehicles`;         // ดึงข้อมูลรถยนต์ทั้งหมด (GET)
+    const CREATE_VEHICLE_API = `${BASE_API_URL}/vehicles/createVehicle`;     // เพิ่มรถยนต์เข้าฐานข้อมูล (POST)
+    const DELETE_VEHICLE_API = `${BASE_API_URL}/vehicles/deleteVehicle`;     // ลบข้อมูลรถยนต์ (DELETE)
+    const GET_LOGS_API = `${BASE_API_URL}/logs/getLogs`;                     // ดึงประวัติการเข้า-ออกของกล้อง LPR (GET)
 
     // ==========================================================
-    // ส่วนที่ 2: ฐานข้อมูลตั้งต้น (Mock Data สำหรับทดสอบทันที)
+    // ส่วนที่ 2: ตัวแปรสถานะระบบส่วนกลาง (Global App State)
+    // (เก็บข้อมูลสดจาก Database และเก็บ Session ผู้ใช้ที่กำลังเปิดหน้าจอ)
     // ==========================================================
-    const defaultUsers = [
-        {
-            id: 1,
-            houseNumber: "158/1",
-            ownerName: "สมหมาย ดีใจ",
-            username: "158/1",
-            password: "pass123",
-            role: "member",
-            registerDate: "2026-08-11",
-            memberStartDate: "2026-08-11",
-            memberExpireDate: "2027-08-11",
-            vehicles: [
-                {
-                    id: 101,
-                    user_id: 1,
-                    plate: "1กข1111",
-                    province: "กรุงเทพฯ",
-                    type: "Car",
-                    registerDate: "2026-08-11",
-                    logs: [
-                        { time_in: "2026-08-25T15:30:00", time_out: "2026-08-25T19:00:00" }
-                    ]
-                }
-            ]
-        },
-        {
-            id: 2,
-            houseNumber: "67/1",
-            ownerName: "ศุภณัฐ",
-            username: "supanat01",
-            password: "123456",
-            role: "member",
-            registerDate: "2026-08-11",
-            memberStartDate: "2026-08-11",
-            memberExpireDate: "2027-08-11",
-            vehicles: []
-        },
-        {
-            id: 3,
-            houseNumber: "99",
-            ownerName: "ลำลอง ฟองดำ",
-            username: "99",
-            password: "pass123",
-            role: "member",
-            registerDate: "2019-09-09",
-            memberStartDate: "2019-09-09",
-            memberExpireDate: "2020-09-09", // บัญชีทดสอบสถานะ Expired
-            vehicles: []
-        }
-    ];
-
-    // โหลดข้อมูลจาก LocalStorage ถ้าไม่มีให้ใช้ข้อมูลตั้งต้น
-    let mainData = JSON.parse(localStorage.getItem('allUsers')) || defaultUsers;
-    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
+    let allUsersData = [];       // เก็บข้อมูลลูกบ้านทั้งหมดจาก Cloud
+    let allVehiclesData = [];    // เก็บข้อมูลรถยนต์ทั้งหมดจาก Cloud
+    let allLogsData = [];        // เก็บประวัติการเข้า-ออกของรถยนต์จากกล้อง LPR
 
     // ==========================================================
     // ส่วนที่ 3: ดึง Elements ทั้งหมดจากหน้า HTML
@@ -81,25 +35,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const navItems = document.querySelectorAll('nav li[data-target]');
     const pages = document.querySelectorAll('.page');
 
-    // Elements ของระบบ Visitor QR Code
+    // Elements ระบบสร้าง Dynamic QR Code สำหรับ Visitor
     const qrModal = document.getElementById('qrModal');
     const btnCloseQr = document.getElementById('btnCloseQr');
     const qrImageContainer = document.getElementById('qrImageContainer');
     const qrDataText = document.getElementById('qrDataText');
     const visitorCodeDisplay = document.getElementById('visitorCodeDisplay');
 
-    // Elements ของระบบเพิ่มรถยนต์
+    // Elements ระบบลงทะเบียนรถยนต์
     const addVehicleModal = document.getElementById('addVehicleModal');
     const addVehicleForm = document.getElementById('addVehicleForm');
     const btnCancelAddVehicle = document.getElementById('btnCancelAddVehicle');
 
-    // Elements สำหรับ Dropdown เลือกวันที่แบบรวดเร็ว
+    // Elements สำหรับ Dropdown เลือกวันที่ พ.ศ.
     const regDaySelect = document.getElementById('regDay');
     const regMonthSelect = document.getElementById('regMonth');
     const regYearSelect = document.getElementById('regYear');
 
     // ==========================================================
-    // ส่วนที่ 4: ฟังก์ชันสร้าง Dropdown วัน/เดือน/ปี (พ.ศ. 2500 - ปัจจุบัน)
+    // ส่วนที่ 4: ฟังก์ชันจัดการ Helper, Dropdown วันที่ และการแปลงข้อความ
     // ==========================================================
     function initDateSelects() {
         if (!regDaySelect || !regMonthSelect || !regYearSelect) return;
@@ -124,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
             regDaySelect.appendChild(opt);
         }
 
-        // 2. สร้างตัวเลือก เดือน (ม.ค. - ธ.ค.)
+        // 2. สร้างตัวเลือก เดือน
         regMonthSelect.innerHTML = "";
         monthsTH.forEach((mName, idx) => {
             const opt = document.createElement('option');
@@ -135,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
             regMonthSelect.appendChild(opt);
         });
 
-        // 3. สร้างตัวเลือก ปี (เริ่ม พ.ศ. 2500 ถึง ปีปัจจุบัน 2569)
+        // 3. สร้างตัวเลือก ปี พ.ศ. (2500 - ปัจจุบัน 2569)
         regYearSelect.innerHTML = "";
         for (let y = 1957; y <= currentYear; y++) {
             const opt = document.createElement('option');
@@ -148,9 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initDateSelects();
 
-    // ==========================================================
-    // ส่วนที่ 5: Helper Functions (ฟังก์ชันช่วยเหลือทั่วไป)
-    // ==========================================================
+    // ฟังก์ชันสร้าง Token สุ่ม 10 หลักสำหรับบัตรผ่าน Visitor
     function generateRandomVisitorCode(length = 10) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let res = '';
@@ -160,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return res;
     }
 
+    // ฟังก์ชันแปลงสตริงวันที่เป็น Date Object
     function parseDate(dateStr) {
         if (!dateStr) return new Date();
         if (dateStr.includes('-')) return new Date(dateStr);
@@ -167,12 +120,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
     }
 
+    // ฟังก์ชันจัดรูปแบบการแสดงผลวันที่แบบ พ.ศ.
     function formatDateDisplay(dateStr) {
-        if (!dateStr) return '-';
+        if (!dateStr || dateStr === '-') return '-';
         const d = parseDate(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
         return d.toLocaleDateString('th-TH');
     }
 
+    // ฟังก์ชันตรวจสอบและอัปเดตการแสดงผล Modal Login
     function updateAuthUI() {
         if (currentUser) {
             if (authModal) authModal.style.display = 'none';
@@ -183,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // สลับแท็บ Login / Register
+    // สลับแท็บ เข้าสู่ระบบ / ลงทะเบียน
     if (tabLoginBtn && tabRegisterBtn) {
         tabLoginBtn.addEventListener('click', () => {
             tabLoginBtn.classList.add('active');
@@ -201,67 +157,72 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================
-    // ส่วนที่ 6: ระบบเข้าสู่ระบบ (Login)
-    // ==========================================
+    // ส่วนที่ 5: ฟังก์ชันหลักในการดึงข้อมูลสดจาก Cloud Database (Sync Data)
+    // ==========================================================
+    async function syncDatabase() {
+        try {
+            const [usersRes, vehRes, logsRes] = await Promise.all([
+                fetch(GET_USERS_API),
+                fetch(GET_VEHICLES_API),
+                fetch(GET_LOGS_API)
+            ]);
+
+            const usersData = await usersRes.json();
+            const vehData = await vehRes.json();
+            const logsData = await logsRes.json();
+
+            // บันทึกเข้า Global State
+            allUsersData = Array.isArray(usersData) ? usersData : (usersData.data || []);
+            allVehiclesData = Array.isArray(vehData) ? vehData : (vehData.data || []);
+            allLogsData = Array.isArray(logsData) ? logsData : (logsData.data || []);
+
+            // ซิงค์ข้อมูลล่าสุดของผู้ใช้ที่กำลังเปิด Session อยู่
+            if (currentUser) {
+                const refreshedUser = allUsersData.find(u => 
+                    u.id === currentUser.id || 
+                    u.houseNumber === currentUser.houseNumber || 
+                    u.username === currentUser.username
+                );
+                if (refreshedUser) {
+                    currentUser = refreshedUser;
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+            }
+        } catch (error) {
+            console.error("เชื่อมต่อ Cloud API ผิดพลาด:", error);
+        }
+    }
+
+    // ==========================================================
+    // ส่วนที่ 6: ระบบเข้าสู่ระบบ (Login) ตรวจสอบกับ Database จริง
+    // ==========================================================
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const inputUser = document.getElementById('loginUsername').value.trim();
             const inputPass = document.getElementById('loginPassword').value.trim();
 
-            let isCloudPassed = false;
+            await syncDatabase(); // โหลดข้อมูลผู้ใช้ล่าสุดจาก Database
 
-            // 1. ลองตรวจสอบกับ Cloud API ของเพื่อน
-            try {
-                const res = await fetch(AUTH_LOGIN_API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: inputUser, password: inputPass })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data === true || data.status === true || data.success === true || data.id) {
-                        isCloudPassed = true;
-                    }
-                }
-            } catch (err) {
-                console.warn("Cloud Login Offline, fallback to local:", err);
-            }
-
-            // 2. ตรวจสอบข้อมูลกับรายการในเครื่อง
-            let matchedUser = mainData.find(u => 
+            // ค้นหาผู้ใช้จาก username หรือเลขที่บ้าน และตรวจสอบรหัสผ่าน
+            const matchedUser = allUsersData.find(u => 
                 (String(u.username) === inputUser || String(u.houseNumber) === inputUser) && 
                 String(u.password) === inputPass
             );
 
-            if (isCloudPassed || matchedUser) {
-                if (!matchedUser) {
-                    matchedUser = {
-                        id: Date.now(),
-                        houseNumber: inputUser,
-                        username: inputUser,
-                        ownerName: "ลูกบ้าน (" + inputUser + ")",
-                        registerDate: new Date().toISOString().split('T')[0],
-                        memberStartDate: new Date().toISOString().split('T')[0],
-                        memberExpireDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
-                        vehicles: []
-                    };
-                    mainData.push(matchedUser);
-                    localStorage.setItem('allUsers', JSON.stringify(mainData));
-                }
-
+            if (matchedUser) {
                 currentUser = matchedUser;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
                 updateAuthUI();
                 renderPage('home');
             } else {
-                alert('ชื่อผู้ใช้งาน หรือ รหัสผ่านไม่ถูกต้อง!\n\n💡 บัญชีทดสอบที่ใช้งานได้:\n1) Username: 158/1 | Password: pass123\n2) Username: supanat01 | Password: 123456\n3) Username: 99 | Password: pass123 (บัญชีหมดอายุ)');
+                alert('เลขที่บ้าน / Username หรือ รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
             }
         });
     }
 
     // ==========================================================
-    // ส่วนที่ 7: ระบบลงทะเบียนสมาชิกใหม่ (Register)
+    // ส่วนที่ 7: ระบบลงทะเบียนสมาชิกใหม่ บันทึกลง Database จริง (POST)
     // ==========================================================
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
@@ -275,17 +236,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const m = regMonthSelect.value;
             const y = regYearSelect.value;
             const startDateVal = `${y}-${m}-${d}`;
-
             const todayStr = new Date().toISOString().split('T')[0];
 
-            // คำนวณวันหมดอายุอัตโนมัติ 1 ปี
+            // คำนวณวันหมดอายุอัตโนมัติ 1 ปีนับจากวันที่เริ่มสมัคร
             const startObj = new Date(startDateVal);
             const expireObj = new Date(startObj);
             expireObj.setFullYear(expireObj.getFullYear() + 1);
             const expireDateStr = expireObj.toISOString().split('T')[0];
 
             const payload = {
-                id: Date.now(),
                 houseNumber: houseNo,
                 ownerName: name,
                 username: username,
@@ -293,57 +252,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 role: "member",
                 registerDate: todayStr,
                 memberStartDate: startDateVal,
-                memberExpireDate: expireDateStr,
-                vehicles: []
+                memberExpireDate: expireDateStr
             };
 
             try {
-                await fetch(CREATE_USER_API, {
+                const response = await fetch(CREATE_USER_API, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
+                const result = await response.json();
+
+                if (response.ok || result.success) {
+                    alert(`ลงทะเบียนสำเร็จสำหรับบ้านเลขที่ ${houseNo}!\nวันเริ่มสมาชิก: ${formatDateDisplay(startDateVal)}\nวันหมดอายุ: ${formatDateDisplay(expireDateStr)}`);
+                    await syncDatabase();
+                    currentUser = allUsersData.find(u => u.houseNumber === houseNo) || payload;
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    updateAuthUI();
+                    renderPage('home');
+                } else {
+                    alert(result.message || 'เกิดข้อผิดพลาดในการลงทะเบียน');
+                }
             } catch (err) {
-                console.warn("API Create User Error:", err);
+                console.error("API Create User Error:", err);
+                alert("ไม่สามารถติดต่อเซิร์ฟเวอร์เพื่อลงทะเบียนได้");
             }
-
-            mainData.push(payload);
-            localStorage.setItem('allUsers', JSON.stringify(mainData));
-            currentUser = payload;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-            alert(`ลงทะเบียนสำเร็จสำหรับบ้านเลขที่ ${houseNo}!\nวันเริ่มสมาชิก: ${formatDateDisplay(startDateVal)}\nวันหมดอายุ: ${formatDateDisplay(expireDateStr)}`);
-            updateAuthUI();
-            renderPage('home');
         });
     }
 
     // ==========================================================
-    // ส่วนที่ 8: ระบบจัดการรถยนต์ (เพิ่มรถ + ลบรถ + ตัดช่องว่าง)
+    // ส่วนที่ 8: ระบบจัดการรถยนต์ (เพิ่มรถ + ลบรถ + ตัดช่องว่าง) (POST & DELETE)
     // ==========================================================
     if (addVehicleForm) {
         addVehicleForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const plateRaw = document.getElementById('inputPlate').value.trim();
             const provinceRaw = document.getElementById('inputProvince').value.trim();
-            if (!plateRaw || !provinceRaw) return;
+            if (!plateRaw || !provinceRaw || !currentUser) return;
 
-            // ตัดช่องว่างป้ายทะเบียนและจังหวัด
-            const cleanedPlate = plateRaw.replace(/\s+/g, '');
+            // ตัดช่องว่างป้ายทะเบียน (Data Sanitization) เพื่อให้ตรงกับ LPR
+            const cleanedPlate = sanitizePlate(plateRaw);
             const cleanedProvince = provinceRaw.replace(/\s+/g, '');
-
-            const targetUser = currentUser || mainData[0];
-            const todayDisplay = new Date().toLocaleDateString('en-GB');
+            const todayDisplay = new Date().toISOString().split('T')[0];
 
             const payload = {
-                user_id: targetUser.id || 1,
+                user_id: currentUser.id,
                 plate: cleanedPlate,
                 province: cleanedProvince,
                 type: "Car",
                 registerDate: todayDisplay
             };
-
-            let vehicleId = Date.now();
 
             try {
                 const res = await fetch(CREATE_VEHICLE_API, {
@@ -351,39 +310,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
                 if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.id) vehicleId = data.id;
+                    alert(`ลงทะเบียนรถยนต์ป้ายทะเบียน "${cleanedPlate}" (${cleanedProvince}) เรียบร้อยแล้ว!`);
+                    addVehicleModal.style.display = 'none';
+                    document.getElementById('inputPlate').value = '';
+                    document.getElementById('inputProvince').value = '';
+                    await syncDatabase();
+                    renderDirectUserDetail();
+                } else {
+                    alert("เพิ่มรถยนต์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
                 }
             } catch (err) {
-                console.warn("API Add Vehicle Error:", err);
+                console.error("API Add Vehicle Error:", err);
+                alert("ไม่สามารถติดต่อเซิร์ฟเวอร์เพื่อบันทึกข้อมูลรถได้");
             }
-
-            const newVehicle = {
-                id: vehicleId,
-                user_id: targetUser.id,
-                plate: cleanedPlate,
-                province: cleanedProvince,
-                type: "Car",
-                registerDate: new Date().toISOString().split('T')[0],
-                logs: []
-            };
-
-            if (!targetUser.vehicles) targetUser.vehicles = [];
-            targetUser.vehicles.push(newVehicle);
-
-            // ซิงค์ mainData เพื่อให้หน้า Home อัปเดตสถิติทันที
-            const idx = mainData.findIndex(u => u.id === targetUser.id || u.houseNumber === targetUser.houseNumber);
-            if (idx !== -1) mainData[idx] = targetUser;
-
-            localStorage.setItem('allUsers', JSON.stringify(mainData));
-            localStorage.setItem('currentUser', JSON.stringify(targetUser));
-
-            alert(`ลงทะเบียนรถยนต์ป้ายทะเบียน "${cleanedPlate}" (${cleanedProvince}) เรียบร้อยแล้ว!`);
-            addVehicleModal.style.display = 'none';
-            document.getElementById('inputPlate').value = '';
-            document.getElementById('inputProvince').value = '';
-            renderDirectUserDetail();
         });
     }
 
@@ -393,99 +334,80 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    async function deleteVehicle(vehicleId, carIndex) {
-        const targetUser = currentUser || mainData[0];
-        if (!targetUser || !targetUser.vehicles) return;
-
-        const vName = targetUser.vehicles[carIndex] ? targetUser.vehicles[carIndex].plate : "";
-        if (!confirm(`คุณต้องการลบรถยนต์ป้ายทะเบียน "${vName}" ออกใช่หรือไม่?`)) return;
+    async function deleteVehicle(vehicleId, plateName) {
+        if (!confirm(`คุณต้องการลบรถยนต์ป้ายทะเบียน "${plateName}" ออกจากฐานข้อมูลใช่หรือไม่?`)) return;
 
         try {
-            await fetch(`${DELETE_VEHICLE_API}/${vehicleId}`, { method: 'DELETE' });
+            const res = await fetch(`${DELETE_VEHICLE_API}/${vehicleId}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert("ลบรายการรถยนต์เรียบร้อยแล้ว!");
+                await syncDatabase();
+                renderDirectUserDetail();
+            } else {
+                alert("ลบข้อมูลไม่สำเร็จ");
+            }
         } catch (err) {
-            console.warn("API Delete Vehicle Error:", err);
+            console.error("API Delete Vehicle Error:", err);
+            alert("ไม่สามารถติดต่อเซิร์ฟเวอร์เพื่อลบข้อมูลได้");
         }
-
-        targetUser.vehicles.splice(carIndex, 1);
-
-        const idx = mainData.findIndex(u => u.id === targetUser.id || u.houseNumber === targetUser.houseNumber);
-        if (idx !== -1) mainData[idx] = targetUser;
-
-        localStorage.setItem('allUsers', JSON.stringify(mainData));
-        localStorage.setItem('currentUser', JSON.stringify(targetUser));
-
-        alert("ลบรายการรถยนต์เรียบร้อยแล้ว!");
-        renderDirectUserDetail();
     }
 
     // ==========================================================
-    // ส่วนที่ 9: ระบบต่ออายุสมาชิก (นับจากวันปัจจุบัน +1 ปีทันที)
+    // ส่วนที่ 9: ระบบต่ออายุสมาชิก บันทึกลง Database จริง (PUT)
     // ==========================================================
     async function renewMembership() {
-        const user = currentUser || mainData[0];
-        if (!user) return;
+        if (!currentUser) return;
 
-        // ดึงวันปัจจุบันที่กำลังกด และบวกเพิ่ม 1 ปีทันที (ไม่ต้องกดซ้ำ)
+        // คำนวณเพิ่ม 1 ปี นับจากวันที่กดต่ออายุทันที
         const today = new Date();
         const newExpObj = new Date(today);
         newExpObj.setFullYear(newExpObj.getFullYear() + 1);
         const newExpStr = newExpObj.toISOString().split('T')[0];
 
         const updatePayload = {
-            houseNumber: user.houseNumber,
-            ownerName: user.ownerName,
-            username: user.username,
-            password: user.password,
-            role: user.role || "member",
-            registerDate: user.registerDate,
-            memberStartDate: user.memberStartDate,
             memberExpireDate: newExpStr
         };
 
         try {
-            await fetch(`${UPDATE_USER_API}/${user.id}`, {
+            const res = await fetch(`${UPDATE_USER_API}/${currentUser.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatePayload)
             });
+
+            if (res.ok) {
+                alert(`ต่ออายุสมาชิกสำเร็จสำหรับบ้านเลขที่ ${currentUser.houseNumber}!\nวันหมดอายุใหม่: ${formatDateDisplay(newExpStr)}`);
+                await syncDatabase();
+                renderDirectUserDetail();
+            } else {
+                alert("ต่ออายุสมาชิกไม่สำเร็จ กรุณาลองใหม่");
+            }
         } catch (err) {
-            console.warn("API Update User Error:", err);
+            console.error("API Update User Error:", err);
+            alert("ไม่สามารถติดต่อเซิร์ฟเวอร์เพื่อต่ออายุสมาชิกได้");
         }
-
-        user.memberExpireDate = newExpStr;
-        const idx = mainData.findIndex(u => u.id === user.id || u.houseNumber === user.houseNumber);
-        if (idx !== -1) mainData[idx] = user;
-
-        localStorage.setItem('allUsers', JSON.stringify(mainData));
-        localStorage.setItem('currentUser', JSON.stringify(user));
-
-        alert(`ต่ออายุสมาชิกสำเร็จสำหรับบ้านเลขที่ ${user.houseNumber}!\nวันหมดอายุใหม่: ${formatDateDisplay(newExpStr)}`);
-        renderDirectUserDetail();
     }
 
     // ==========================================================
-    // ส่วนที่ 10: การเรนเดอร์หน้าจอต่างๆ (USER DATA, Dashboard, Logs)
+    // ส่วนที่ 10: การเรนเดอร์หน้าจอ (User Detail, Dashboard, และ Logs)
     // ==========================================================
     function createExpiryProgressBar(startDateStr, timeoutDateStr) {
         const end = parseDate(timeoutDateStr);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // คำนวณจำนวนวันที่เหลือจนถึงวันหมดอายุ
         const remainingDays = Math.round((end - today) / (1000 * 60 * 60 * 24));
-
-        // กำหนดรอบอายุบัตรมาตรฐานเป็น 365 วัน (1 ปี)
         const totalDays = 365;
         let percent = Math.min(100, Math.max(0, (remainingDays / totalDays) * 100));
 
-        let color = '#28a745'; // สีเขียว (ปกติ)
+        let color = '#28a745'; // สีเขียว
         if (remainingDays <= 0) {
             percent = 0;
             color = '#dc3545';
         } else if (remainingDays <= 30) {
-            color = '#dc3545'; // สีแดง (เหลือน้อยกว่า 30 วัน)
+            color = '#dc3545'; // สีแดง
         } else if (remainingDays <= 90) {
-            color = '#ffc107'; // สีเหลือง (เหลือน้อยกว่า 90 วัน)
+            color = '#ffc107'; // สีเหลือง
         }
 
         let statusText = `เหลืออีก ${remainingDays} วัน`;
@@ -507,30 +429,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderDirectUserDetail() {
         const container = document.getElementById('userDirectDetail');
-        const user = currentUser || mainData[0];
-        if (!container || !user) return;
+        if (!container || !currentUser) return;
+
+        // ดึงรถของลูกบ้านคนนี้จากฐานข้อมูลจริง
+        const myVehicles = allVehiclesData.filter(v => v.user_id === currentUser.id);
 
         let vehiclesHTML = '';
-        let carCount = 0;
-
-        if (user.vehicles && user.vehicles.length > 0) {
-            user.vehicles.forEach((v, index) => {
-                if (v.type === "Car") {
-                    carCount++;
-                    vehiclesHTML += `
-                    <div class="headVlist">
-                        <p class="Vlist">${v.plate} ${v.province ? `(${v.province})` : ''}</p>
-                        <p class="Vlist">รถยนต์</p>
-                        <div style="display: flex; justify-content: center; gap: 8px; align-items: center;">
-                            <a href="#" data-target="vehicleDetail" data-car-index="${index}" data-id="${user.id}">ดูประวัติ</a>
-                            <button type="button" class="btn-delete-v" data-v-id="${v.id}" data-car-index="${index}" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-family: Prompt; font-size: 13px;">🗑️ ลบ</button>
-                        </div>
-                    </div>`;
-                }
+        if (myVehicles.length > 0) {
+            myVehicles.forEach((v) => {
+                vehiclesHTML += `
+                <div class="headVlist">
+                    <p class="Vlist">${v.plate} ${v.province ? `(${v.province})` : ''}</p>
+                    <p class="Vlist">${v.type || 'รถยนต์'}</p>
+                    <div style="display: flex; justify-content: center; gap: 8px; align-items: center;">
+                        <a href="#" data-target="vehicleDetail" data-car-plate="${v.plate}" data-car-id="${v.id}">ดูประวัติ</a>
+                        <button type="button" class="btn-delete-v" data-v-id="${v.id}" data-v-plate="${v.plate}" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-family: Prompt; font-size: 13px;">🗑️ ลบ</button>
+                    </div>
+                </div>`;
             });
-        }
-
-        if (carCount === 0) {
+        } else {
             vehiclesHTML = `<div class="headVlist">
                                 <p class="Vlist">ไม่มีข้อมูลรถยนต์ที่ลงทะเบียน</p>
                                 <p class="Vlist">-</p>
@@ -538,20 +455,20 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>`;
         }
 
-        const progressBar = createExpiryProgressBar(user.memberStartDate, user.memberExpireDate);
+        const progressBar = createExpiryProgressBar(currentUser.memberStartDate, currentUser.memberExpireDate);
 
         container.innerHTML = `
             <div class="homeNumber">
                 <p class="homeList">เลขที่บ้าน</p>
-                <p class="homeList">${user.houseNumber}</p>
+                <p class="homeList">${currentUser.houseNumber}</p>
             </div>
             <div class="nameOwner">
                 <p class="homeList">ชื่อเจ้าบ้าน</p>
-                <p class="homeList">${user.ownerName}</p>
+                <p class="homeList">${currentUser.ownerName}</p>
             </div>
             <div class="TimeData">
-                <p class="homeList">วันที่เข้าอยู่: ${formatDateDisplay(user.registerDate)}</p>
-                <p class="homeList">วันที่เริ่มสมาชิก: ${formatDateDisplay(user.memberStartDate)} | หมดอายุ: ${formatDateDisplay(user.memberExpireDate)}</p>
+                <p class="homeList">วันที่เข้าอยู่: ${formatDateDisplay(currentUser.registerDate)}</p>
+                <p class="homeList">วันที่เริ่มสมาชิก: ${formatDateDisplay(currentUser.memberStartDate)} | หมดอายุ: ${formatDateDisplay(currentUser.memberExpireDate)}</p>
             </div>
             ${progressBar}
             
@@ -576,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${vehiclesHTML}
             </section>`;
 
-        // ผูก Event ปุ่มในหน้า User Detail
+        // ผูก Event
         document.getElementById('btnRenewMember')?.addEventListener('click', renewMembership);
         document.getElementById('btnOpenAddVehicleModal')?.addEventListener('click', () => {
             addVehicleModal.style.display = 'flex';
@@ -584,7 +501,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         container.querySelectorAll('.btn-delete-v').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                deleteVehicle(e.target.dataset.vId, Number(e.target.dataset.carIndex));
+                deleteVehicle(e.target.dataset.vId, e.target.dataset.vPlate);
             });
         });
 
@@ -592,8 +509,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const randomCode = generateRandomVisitorCode(10);
             const qrPayload = {
                 type: "VISITOR_PASS",
-                user_id: user.id,
-                houseNumber: user.houseNumber,
+                user_id: currentUser.id,
+                houseNumber: currentUser.houseNumber,
                 visitorCode: randomCode,
                 generateTime: new Date().toISOString(),
                 status: "ACTIVE"
@@ -609,33 +526,32 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function renderVehicleDetail(id, carIndex) {
-        const user = mainData.find(u => u.id === id) || currentUser;
+    function renderVehicleDetail(targetPlate, vehicleId) {
         const pVdetail = document.querySelector("#page-vehicleDetail");
-        if (!pVdetail || !user || !user.vehicles) return;
+        if (!pVdetail) return;
 
-        const data = user.vehicles[carIndex];
-        if (!data) return;
+        const vehicle = allVehiclesData.find(v => v.id === Number(vehicleId) || sanitizePlate(v.plate) === sanitizePlate(targetPlate));
+        const matchedLogs = getMatchedVehicleLogs(allLogsData, targetPlate);
 
         let timeIn = '', timeOut = '';
-        if (data.logs && data.logs.length > 0) {
-            data.logs.forEach((log) => {
-                timeIn += `<span class="time-record">${log.time_in || '-'}</span>`;
-                timeOut += `<span class="time-record">${log.time_out || 'ยังไม่ออก'}</span>`;
+        if (matchedLogs.length > 0) {
+            matchedLogs.forEach((log) => {
+                timeIn += `<span class="time-record">${log.formattedTimeIn} ${log.cameraInText}</span>`;
+                timeOut += `<span class="time-record">${log.formattedTimeOut} ${log.cameraOutText}</span>`;
             });
         } else {
-            timeIn = `<span class="time-record">-</span>`;
-            timeOut = `<span class="time-record">-</span>`;
+            timeIn = `<span class="time-record">ไม่พบประวัติเข้า</span>`;
+            timeOut = `<span class="time-record">ไม่พบประวัติออก</span>`;
         }
 
         pVdetail.innerHTML = `
         <button type="button" class="back-btn" id="btnBackToDetail">← กลับ</button>
         <div class="vehicle-card">
-            <div class="v-title">ประวัติการเข้า-ออก</div>
-            <div class="v-date">วันที่ลงทะเบียนรถ : ${formatDateDisplay(data.registerDate)} </div>
+            <div class="v-title">ประวัติการเข้า-ออก (ดึงข้อมูลจากระบบกล้อง LPR)</div>
+            <div class="v-date">วันที่ลงทะเบียนรถ : ${formatDateDisplay(vehicle ? vehicle.registerDate : '')} </div>
             <div class="v-grid">
-                <div class="v-item">ป้ายทะเบียน : ${data.plate} ${data.province ? `(${data.province})` : ''}</div>
-                <div class="v-item">ประเภท : รถยนต์</div>
+                <div class="v-item">ป้ายทะเบียน : ${vehicle ? vehicle.plate : targetPlate}</div>
+                <div class="v-item">ประเภท : ${vehicle ? vehicle.type : 'รถยนต์'}</div>
                 <div class="v-item">เวลาเข้า</div>
                 <div class="v-item">เวลาออก</div>
                 <div class="v-item v-time">${timeIn}</div>
@@ -646,40 +562,35 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('btnBackToDetail')?.addEventListener('click', () => renderPage('user'));
     }
 
-    function renderDashboard(dataList) {
-        let vehicleTotal = 0, carIn = 0, carOut = 0, insideVillageCount = 0;
+    function renderDashboard() {
+        if (!currentUser) return;
 
-        dataList.forEach(user => {
-            if (user.vehicles) {
-                user.vehicles.forEach(vehicle => {
-                    if (vehicle.type === "Car") {
-                        vehicleTotal++;
-                        if (vehicle.logs && vehicle.logs.length > 0) {
-                            vehicle.logs.forEach(log => {
-                                if (log.time_in) carIn++;
-                                if (log.time_out) carOut++;
-                                if (log.time_in && !log.time_out) insideVillageCount++;
-                            });
-                        }
-                    }
-                });
-            }
+        const myVehicles = allVehiclesData.filter(v => v.user_id === currentUser.id);
+        const myPlates = myVehicles.map(v => sanitizePlate(v.plate));
+        const myLogs = allLogsData.filter(log => myPlates.includes(sanitizePlate(log.plate)));
 
-            const statusElem = document.getElementById("residentStatus");
-            const expireElem = document.getElementById("expireDateText");
+        let carIn = 0, carOut = 0, insideVillageCount = 0;
 
-            const expDate = parseDate(user.memberExpireDate);
-            const isExpired = expDate < new Date();
-
-            if (statusElem) statusElem.textContent = isExpired ? 'Expired' : 'Active';
-            if (expireElem) expireElem.textContent = formatDateDisplay(user.memberExpireDate);
+        myLogs.forEach(log => {
+            if (log.time_in) carIn++;
+            if (log.time_out) carOut++;
+            if (log.time_in && !log.time_out) insideVillageCount++;
         });
 
-        document.getElementById("vehicleTotal").textContent = vehicleTotal;
+        const statusElem = document.getElementById("residentStatus");
+        const expireElem = document.getElementById("expireDateText");
+
+        const expDate = parseDate(currentUser.memberExpireDate);
+        const isExpired = expDate < new Date();
+
+        if (statusElem) statusElem.textContent = isExpired ? 'Expired' : 'Active';
+        if (expireElem) expireElem.textContent = formatDateDisplay(currentUser.memberExpireDate);
+
+        document.getElementById("vehicleTotal").textContent = myVehicles.length;
         document.getElementById("carIn").textContent = carIn;
         document.getElementById("carOut").textContent = carOut;
         document.getElementById("insideVillage").textContent = insideVillageCount;
-        document.getElementById("welcomeText").textContent = currentUser ? `Dashboard ลูกบ้าน (บ้านเลขที่ ${currentUser.houseNumber})` : "Dashboard ลูกบ้าน";
+        document.getElementById("welcomeText").textContent = `Dashboard ลูกบ้าน (บ้านเลขที่ ${currentUser.houseNumber})`;
         document.getElementById("todayDate").textContent = new Date().toLocaleDateString("th-TH", { dateStyle: "full" });
     }
 
@@ -697,12 +608,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (activeLi) activeLi.classList.add('user-select');
 
         if (target === "home") {
-            const filteredData = currentUser ? mainData.filter(u => u.houseNumber === currentUser.houseNumber) : mainData;
-            renderDashboard(filteredData.length > 0 ? filteredData : [currentUser]);
+            renderDashboard();
         } else if (target === "user") {
             renderDirectUserDetail();
         } else if (target === "vehicleDetail" && params) {
-            renderVehicleDetail(Number(params.id), Number(params.carIndex));
+            renderVehicleDetail(params.carPlate, params.carId);
         }
     }
 
@@ -715,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
             currentUser = null;
             updateAuthUI();
         });
@@ -735,30 +645,36 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPage(target, params);
     });
 
-    // เริ่มต้นระบบ
-    updateAuthUI();
-    renderPage('home');
+    // เริ่มต้นระบบ: ซิงค์ฐานข้อมูลสดก่อนแสดงผล
+    async function init() {
+        updateAuthUI();
+        await syncDatabase();
+        if (currentUser) {
+            renderPage('home');
+        }
+    }
+
+    init();
 });
 
-/* ==========================================================================
-   ส่วนเสริม: จัดการข้อมูลจาก Database (ตัดช่องว่างป้ายทะเบียน + แปลงวันเวลา/ดัก null)
-   ========================================================================== */
+// ==========================================================
+// ส่วนที่ 12: ฟังก์ชันสำหรับ Sanitization และจัดการค่า Null
+// ==========================================================
 
-// 1. ฟังก์ชันตัดช่องว่างป้ายทะเบียน (Data Sanitization)
-// ช่วยให้ "กข 1234" และ "กข1234" สามารถจับคู่ข้อมูลกันได้ถูกต้อง
+// ฟังก์ชันตัดช่องว่างป้ายทะเบียน (ช่วยจับคู่ "กข 1234" กับ "กข1234")
 function sanitizePlate(plateNumber) {
     if (!plateNumber) return '';
     return plateNumber.toString().replace(/\s+/g, '');
 }
 
-// 2. ฟังก์ชันแปลงรูปแบบวัน-เวลาไทย และป้องกันการแสดงผลค่า null
+// ฟังก์ชันแปลงรูปแบบวัน-เวลาไทย และป้องกันการแสดงผลค่า null
 function formatLogDateTime(dateString) {
     if (!dateString || dateString === 'null') {
         return 'ยังอยู่ภายในโครงการ';
     }
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-        return dateString; // กรณีเป็นข้อความปกติที่ไม่ได้มาในรูปแบบ ISO Date
+        return dateString;
     }
     return date.toLocaleString('th-TH', {
         year: 'numeric',
@@ -769,7 +685,7 @@ function formatLogDateTime(dateString) {
     });
 }
 
-// 3. ฟังก์ชันกรองและจัดรูปแบบประวัติการเข้า-ออกสำหรับรถของลูกบ้าน
+// ฟังก์ชันกรองและจัดรูปแบบประวัติการเข้า-ออก
 function getMatchedVehicleLogs(apiResponseData, targetPlate) {
     if (!Array.isArray(apiResponseData)) return [];
     
