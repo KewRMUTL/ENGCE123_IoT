@@ -3,7 +3,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================
     // ส่วนที่ 1: กำหนด URL เชื่อมต่อ Cloud RESTful API Backend
-    // (ใช้ Base URL จริง และชี้ไปยัง Endpoint ฝั่งฐานข้อมูลโดยตรง)
     // ==========================================================
     const BASE_API_URL = "https://api-node-iot.onrender.com/api";
     const GET_USERS_API = `${BASE_API_URL}/users/getUsers`;                 // ดึงข้อมูลลูกบ้านทั้งหมด (GET)
@@ -16,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ==========================================================
     // ส่วนที่ 2: ตัวแปรสถานะระบบส่วนกลาง (Global App State)
-    // (เก็บข้อมูลสดจาก Database และเก็บ Session ผู้ใช้ที่กำลังเปิดหน้าจอ)
     // ==========================================================
     let currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
     let allUsersData = [];       // เก็บข้อมูลลูกบ้านทั้งหมดจาก Cloud
@@ -68,7 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
 
-        // 1. สร้างตัวเลือก วันที่ 1 - 31
         regDaySelect.innerHTML = "";
         for (let d = 1; d <= 31; d++) {
             const opt = document.createElement('option');
@@ -78,7 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
             regDaySelect.appendChild(opt);
         }
 
-        // 2. สร้างตัวเลือก เดือน
         regMonthSelect.innerHTML = "";
         monthsTH.forEach((mName, idx) => {
             const opt = document.createElement('option');
@@ -89,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
             regMonthSelect.appendChild(opt);
         });
 
-        // 3. สร้างตัวเลือก ปี พ.ศ. (2500 - ปัจจุบัน 2569)
         regYearSelect.innerHTML = "";
         for (let y = 1957; y <= currentYear; y++) {
             const opt = document.createElement('option');
@@ -102,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initDateSelects();
 
-    // ฟังก์ชันสร้าง Token สุ่ม 10 หลักสำหรับบัตรผ่าน Visitor
     function generateRandomVisitorCode(length = 10) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let res = '';
@@ -112,7 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return res;
     }
 
-    // ฟังก์ชันแปลงสตริงวันที่เป็น Date Object
     function parseDate(dateStr) {
         if (!dateStr) return new Date();
         if (dateStr.includes('-')) return new Date(dateStr);
@@ -120,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
     }
 
-    // ฟังก์ชันจัดรูปแบบการแสดงผลวันที่แบบ พ.ศ.
     function formatDateDisplay(dateStr) {
         if (!dateStr || dateStr === '-') return '-';
         const d = parseDate(dateStr);
@@ -128,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return d.toLocaleDateString('th-TH');
     }
 
-    // ฟังก์ชันตรวจสอบและอัปเดตการแสดงผล Modal Login
     function updateAuthUI() {
         if (currentUser) {
             if (authModal) authModal.style.display = 'none';
@@ -139,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // สลับแท็บ เข้าสู่ระบบ / ลงทะเบียน
     if (tabLoginBtn && tabRegisterBtn) {
         tabLoginBtn.addEventListener('click', () => {
             tabLoginBtn.classList.add('active');
@@ -171,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const vehData = await vehRes.json();
             const logsData = await logsRes.json();
 
-            // รองรับทั้งแบบ Array ตรงๆ และแบบห่อด้วย { success: true, data: [...] }
             allUsersData = Array.isArray(usersData) ? usersData : (usersData.data || []);
             allVehiclesData = Array.isArray(vehData) ? vehData : (vehData.data || []);
             allLogsData = Array.isArray(logsData) ? logsData : (logsData.data || []);
@@ -201,9 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const inputUser = document.getElementById('loginUsername').value.trim();
             const inputPass = document.getElementById('loginPassword').value.trim();
 
-            await syncDatabase(); // โหลดข้อมูลผู้ใช้ล่าสุดจาก Database
+            await syncDatabase();
 
-            // ค้นหาผู้ใช้จาก username หรือเลขที่บ้าน และตรวจสอบรหัสผ่าน
             const matchedUser = allUsersData.find(u => 
                 (String(u.username) === inputUser || String(u.houseNumber) === inputUser) && 
                 String(u.password) === inputPass
@@ -237,7 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const startDateVal = `${y}-${m}-${d}`;
             const todayStr = new Date().toISOString().split('T')[0];
 
-            // คำนวณวันหมดอายุอัตโนมัติ 1 ปีนับจากวันที่เริ่มสมัคร
             const startObj = new Date(startDateVal);
             const expireObj = new Date(startObj);
             expireObj.setFullYear(expireObj.getFullYear() + 1);
@@ -281,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================
-    // ส่วนที่ 8: ระบบจัดการรถยนต์ (เพิ่มรถ + ลบรถ + ตัดช่องว่าง) (POST & DELETE)
+    // ส่วนที่ 8: ระบบจัดการรถยนต์ (เพิ่มรถ + ลบรถ + ตัดช่องว่าง)
     // ==========================================================
     if (addVehicleForm) {
         addVehicleForm.addEventListener('submit', async (e) => {
@@ -290,7 +277,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const provinceRaw = document.getElementById('inputProvince').value.trim();
             if (!plateRaw || !provinceRaw || !currentUser) return;
 
-            // ตัดช่องว่างป้ายทะเบียน (Data Sanitization) เพื่อให้ตรงกับ LPR
             const cleanedPlate = sanitizePlate(plateRaw);
             const cleanedProvince = provinceRaw.replace(/\s+/g, '');
             const todayDisplay = new Date().toISOString().split('T')[0];
@@ -352,18 +338,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================
-    // ส่วนที่ 9: ระบบต่ออายุสมาชิก บันทึกลง Database จริง (PUT)
+    // ส่วนที่ 9: ระบบต่ออายุสมาชิก บันทึกลง Database จริง (PUT แบบป้องกันค่า Null)
     // ==========================================================
     async function renewMembership() {
         if (!currentUser) return;
 
-        // คำนวณเพิ่ม 1 ปี นับจากวันที่กดต่ออายุทันที
         const today = new Date();
         const newExpObj = new Date(today);
         newExpObj.setFullYear(newExpObj.getFullYear() + 1);
         const newExpStr = newExpObj.toISOString().split('T')[0];
 
+        // ส่งข้อมูลเดิมของผู้ใช้กลับไปด้วยทั้งหมด ป้องกัน Database ล้างค่าทิ้งเป็น null
         const updatePayload = {
+            houseNumber: currentUser.houseNumber || "",
+            ownerName: currentUser.ownerName || "",
+            username: currentUser.username || currentUser.houseNumber || "",
+            password: currentUser.password || "pass123",
+            role: currentUser.role || "member",
+            registerDate: currentUser.registerDate || new Date().toISOString().split('T')[0],
+            memberStartDate: currentUser.memberStartDate || new Date().toISOString().split('T')[0],
             memberExpireDate: newExpStr
         };
 
@@ -399,14 +392,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const totalDays = 365;
         let percent = Math.min(100, Math.max(0, (remainingDays / totalDays) * 100));
 
-        let color = '#28a745'; // สีเขียว
+        let color = '#28a745';
         if (remainingDays <= 0) {
             percent = 0;
             color = '#dc3545';
         } else if (remainingDays <= 30) {
-            color = '#dc3545'; // สีแดง
+            color = '#dc3545';
         } else if (remainingDays <= 90) {
-            color = '#ffc107'; // สีเหลือง
+            color = '#ffc107';
         }
 
         let statusText = `เหลืออีก ${remainingDays} วัน`;
@@ -430,7 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById('userDirectDetail');
         if (!container || !currentUser) return;
 
-        // ดึงรถของลูกบ้านคนนี้จากฐานข้อมูลจริง
         const myVehicles = allVehiclesData.filter(v => v.user_id === currentUser.id);
 
         let vehiclesHTML = '';
@@ -459,11 +451,11 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = `
             <div class="homeNumber">
                 <p class="homeList">เลขที่บ้าน</p>
-                <p class="homeList">${currentUser.houseNumber}</p>
+                <p class="homeList">${currentUser.houseNumber || '-'}</p>
             </div>
             <div class="nameOwner">
                 <p class="homeList">ชื่อเจ้าบ้าน</p>
-                <p class="homeList">${currentUser.ownerName}</p>
+                <p class="homeList">${currentUser.ownerName || '-'}</p>
             </div>
             <div class="TimeData">
                 <p class="homeList">วันที่เข้าอยู่: ${formatDateDisplay(currentUser.registerDate)}</p>
@@ -492,7 +484,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${vehiclesHTML}
             </section>`;
 
-        // ผูก Event
         document.getElementById('btnRenewMember')?.addEventListener('click', renewMembership);
         document.getElementById('btnOpenAddVehicleModal')?.addEventListener('click', () => {
             addVehicleModal.style.display = 'flex';
@@ -589,7 +580,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("carIn").textContent = carIn;
         document.getElementById("carOut").textContent = carOut;
         document.getElementById("insideVillage").textContent = insideVillageCount;
-        document.getElementById("welcomeText").textContent = `Dashboard ลูกบ้าน (บ้านเลขที่ ${currentUser.houseNumber})`;
+        document.getElementById("welcomeText").textContent = `Dashboard ลูกบ้าน (บ้านเลขที่ ${currentUser.houseNumber || '-'})`;
         document.getElementById("todayDate").textContent = new Date().toLocaleDateString("th-TH", { dateStyle: "full" });
     }
 
@@ -644,7 +635,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPage(target, params);
     });
 
-    // เริ่มต้นระบบ: ซิงค์ฐานข้อมูลสดก่อนแสดงผล
     async function init() {
         updateAuthUI();
         await syncDatabase();
@@ -660,13 +650,11 @@ document.addEventListener("DOMContentLoaded", () => {
 // ส่วนที่ 12: ฟังก์ชันสำหรับ Sanitization และจัดการค่า Null
 // ==========================================================
 
-// ฟังก์ชันตัดช่องว่างป้ายทะเบียน (ช่วยจับคู่ "กข 1234" กับ "กข1234")
 function sanitizePlate(plateNumber) {
     if (!plateNumber) return '';
     return plateNumber.toString().replace(/\s+/g, '');
 }
 
-// ฟังก์ชันแปลงรูปแบบวัน-เวลาไทย และป้องกันการแสดงผลค่า null
 function formatLogDateTime(dateString) {
     if (!dateString || dateString === 'null') {
         return 'ยังอยู่ภายในโครงการ';
@@ -684,7 +672,6 @@ function formatLogDateTime(dateString) {
     });
 }
 
-// ฟังก์ชันกรองและจัดรูปแบบประวัติการเข้า-ออก
 function getMatchedVehicleLogs(apiResponseData, targetPlate) {
     if (!Array.isArray(apiResponseData)) return [];
     
