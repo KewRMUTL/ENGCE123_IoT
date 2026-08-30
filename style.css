@@ -183,6 +183,7 @@ nav ul .user-select {
     transform: scale(1.03);
 }
 
+/* ปรับ Grid และระยะขอบให้คอลัมน์กึ่งกลางสมมาตร */
 .vehicleUser .headVlist {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -190,6 +191,7 @@ nav ul .user-select {
     margin: 0.5rem 1rem 0;
     background-color: var(--color-primary);
     border-radius: 6px;
+    padding: 4px 10px;
 }
 
 .vehicleUser .headVlist .Vlist {
@@ -200,19 +202,46 @@ nav ul .user-select {
     font-size: 1.1rem;
 }
 
+/* ปรับปุ่มดูประวัติให้อยู่ในแถวเดียวกัน ไม่ดันหลุดกรอบ */
 .vehicleUser .headVlist a {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
     text-decoration: none;
     color: var(--color-primary);
     background-color: var(--color-white);
     border-radius: 20px;
-    padding: 8px 16px;
-    margin: 8px auto;
+    padding: 6px 14px;
+    margin: 0;
     font-weight: 600;
-    transition: all 0.2s;
-    width: fit-content;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.vehicleUser .headVlist a:hover {
+    background-color: #e6ecf2;
+    transform: translateY(-1px);
+}
+
+/* สไตล์สำหรับปุ่มลบ */
+.btn-delete-v {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: "Prompt", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.btn-delete-v:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
 }
 
 /* ปุ่ม QR Code */
